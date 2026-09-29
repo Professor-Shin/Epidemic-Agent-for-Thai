@@ -1,0 +1,11 @@
+# Core
+numpy>=1.26.0
+matplotlib>=3.7.0
+python-dotenv>=1.0.0
+
+# LLM behavioural layer (only needed for arms C/D/E without --mock)
+google-adk>=0.4.0
+google-genai>=0.3.0
+
+# Tests
+pytest>=8.0.0

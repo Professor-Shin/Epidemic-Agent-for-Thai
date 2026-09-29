@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบจำลองการระบาดด้วย Generative Agent — ภาพประกอบการทำงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111c31; --panel2:#16233c; --line:#243553;
+    --tx:#e6edf7; --tx2:#93a5c0; --tx3:#64748b;
+    --s:#3b82f6; --i:#ef4444; --r:#22c55e; --acc:#f59e0b; --acc2:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--tx);
+    font-family:'Noto Sans Thai','Sarabun',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.65; font-size:15px;
+  }
+  code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+  .wrap{max-width:1280px;margin:0 auto;padding:28px 20px 80px}
+  header h1{font-size:26px;margin:0 0 6px;font-weight:700;letter-spacing:.2px}
+  header p{margin:0;color:var(--tx2);max-width:900px}
+  .tagline{display:inline-block;margin-top:10px;padding:4px 10px;border:1px solid var(--line);
+    border-radius:999px;font-size:12.5px;color:var(--tx2);background:var(--panel)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:1000px){ .main{grid-template-columns:1.25fr 1fr} }
+  h2{font-size:18px;margin:28px 0 12px;font-weight:700}
+  h3{font-size:15px;margin:0 0 10px;font-weight:700;color:var(--tx)}
+  .sub{color:var(--tx2);font-size:13.5px}
+
+  /* ---- controls ---- */
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin:18px 0}
+  .ctl{display:flex;flex-direction:column;gap:5px}
+  .ctl label{font-size:12px;color:var(--tx2)}
+  select,input[type=number]{
+    background:var(--panel2);color:var(--tx);border:1px solid var(--line);
+    border-radius:9px;padding:7px 10px;font:inherit;font-size:14px;min-width:84px
+  }
+  input[type=range]{accent-color:var(--acc);width:120px}
+  button{
+    background:var(--panel2);color:var(--tx);border:1px solid var(--line);
+    border-radius:9px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer;transition:.15s
+  }
+  button:hover{background:#1e2f4d;border-color:#35507e}
+  button.primary{background:var(--acc);color:#231600;border-color:var(--acc)}
+  button.primary:hover{filter:brightness(1.1)}
+
+  /* ---- stage ---- */
+  .stagebox{position:relative}
+  canvas{display:block;width:100%;border-radius:10px;background:#0a111f}
+  #tip{
+    position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
+    background:#0a1526;border:1px solid #35507e;border-radius:9px;padding:8px 11px;
+    font-size:12.5px;max-width:250px;z-index:5;box-shadow:0 8px 22px #0008
+  }
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:13px;color:var(--tx2)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-inline-end:6px;vertical-align:-1px}
+
+  /* ---- pipeline ---- */
+  .pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .step{
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;
+    font-size:12.5px;color:var(--tx2);transition:.2s
+  }
+  .step b{display:block;color:var(--tx);font-size:13px}
+  .step.on{border-color:var(--acc);background:#2a2110;color:var(--tx);box-shadow:0 0 0 1px var(--acc) inset}
+  .step .f{display:block;margin-top:3px;font-size:11px;color:var(--tx3)}
+
+  /* ---- stats ---- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .stat .k{font-size:11.5px;color:var(--tx2)}
+  .stat .v{font-size:21px;font-weight:700;line-height:1.25}
+
+  /* ---- log ---- */
+  #log{height:196px;overflow-y:auto;background:#0a111f;border:1px solid var(--line);
+    border-radius:10px;padding:8px;font-size:12.5px}
+  .row{display:flex;gap:8px;padding:4px 6px;border-radius:7px;cursor:pointer}
+  .row:hover{background:#16233c}
+  .row.sel{background:#1d2b47;outline:1px solid #35507e}
+  .pill{flex:none;width:44px;text-align:center;border-radius:5px;font-size:11px;font-weight:600;height:19px;line-height:19px}
+  .go{background:#1e3a8a;color:#bfdbfe}
+  .stay{background:#7c2d12;color:#fed7aa}
+  .row .nm{flex:none;width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)}
+  .row .rs{color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  pre.prompt{
+    background:#0a111f;border:1px solid var(--line);border-radius:10px;padding:12px;
+    font-size:12px;line-height:1.6;white-space:pre-wrap;margin:0;max-height:250px;overflow:auto;color:#cfe0f5
+  }
+  pre.prompt .hl{color:var(--acc)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:start;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--tx2);font-weight:600;font-size:12.5px}
+  .k{color:var(--acc2)}
+  ul{margin:8px 0;padding-inline-start:20px}
+  li{margin:5px 0}
+  .note{border-inline-start:3px solid var(--acc);background:#1a1608;padding:10px 14px;border-radius:0 10px 10px 0;font-size:13.5px}
+  .fine{color:var(--tx3);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>ระบบจำลองการระบาดด้วย Generative Agent</h1>
+  <p>ภาพจำลองการทำงานของโค้ดในโปรเจกต์นี้ — ตัวแบบผสมระหว่าง <b>Generative Agent (LLM ตัดสินใจแทนคน)</b>
+     กับ <b>Agent-Based Model (จำลองการสัมผัสและการแพร่เชื้อ)</b> อ้างอิงงานของ Williams et al. (2023)</p>
+  <span class="tagline">เมือง Dewberry Hollow · ไวรัส Catasat · กดปุ่ม “เริ่ม” เพื่อดูการทำงานทีละวัน</span>
+</header>
+
+<div class="controls">
+  <div class="ctl"><label>เงื่อนไขการทดลอง (--condition)</label>
+    <select id="cond">
+      <option value="base">base — รู้แค่ตัวตน</option>
+      <option value="self">self — รู้อาการตัวเอง</option>
+      <option value="full" selected>full — รู้อาการ + ข่าวผู้ป่วย</option>
+    </select></div>
+  <div class="ctl"><label>ประชากร (n)</label><input type="number" id="pop" value="40" min="5" max="120"></div>
+  <div class="ctl"><label>จำนวนวัน (d)</label><input type="number" id="days" value="45" min="5" max="200"></div>
+  <div class="ctl"><label>อัตราการพบปะ</label><input type="number" id="cr" value="5" min="1" max="20"></div>
+  <div class="ctl"><label>โอกาสติดต่อ/ครั้ง</label><input type="number" id="inf" value="0.1" min="0.01" max="1" step="0.01"></div>
+  <div class="ctl"><label>ผู้ติดเชื้อเริ่มต้น</label><input type="number" id="i0" value="1" min="1" max="20"></div>
+  <div class="ctl"><label>seed</label><input type="number" id="seed" value="42"></div>
+  <div class="ctl"><label>ความเร็ว <span id="spdv" class="fine">1.0×</span></label>
+    <input type="range" id="spd" min="0.25" max="4" step="0.25" value="1"></div>
+  <button class="primary" id="play">▶ เริ่ม</button>
+  <button id="step">⏭ ทีละวัน</button>
+  <button id="reset">⟲ ตั้งค่าใหม่</button>
+</div>
+
+<div class="grid main">
+  <!-- ซ้าย: เวที -->
+  <div class="card">
+    <div class="pipe">
+      <div class="step" id="p0"><b>1 · ตัดสินใจ</b>LLM ตอบ “ไป/ไม่ไปทำงาน”<span class="f">src/agent.py</span></div>
+      <div class="step" id="p1"><b>2 · พบปะ</b>สุ่มคู่สัมผัสของคนที่ออกจากบ้าน<span class="f">src/world.py</span></div>
+      <div class="step" id="p2"><b>3 · แพร่เชื้อ</b>ทอยลูกเต๋าตามค่า infectivity<span class="f">src/world.py</span></div>
+      <div class="step" id="p3"><b>4 · อัปเดตโรค</b>เดินนาฬิกาโรค / หายป่วย<span class="f">src/disease.py</span></div>
+    </div>
+    <div class="stagebox">
+      <canvas id="town" height="940"></canvas>
+      <div id="tip"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--s)"></i>เสี่ยงติดเชื้อ (S)</span>
+      <span><i style="background:var(--i)"></i>ติดเชื้อ (I)</span>
+      <span><i style="background:var(--r)"></i>หายแล้ว/มีภูมิ (R)</span>
+      <span><i style="background:#fff;box-shadow:0 0 0 3px #fff3"></i>วงขาว = มีอาการ</span>
+      <span class="fine">คลิกที่จุดเพื่อดู prompt ของคนนั้น</span>
+    </div>
+  </div>
+
+  <!-- ขวา: ตัวเลข + กราฟ + log -->
+  <div class="grid" style="align-content:start">
+    <div class="card">
+      <h3>สถานะวันที่ <span id="dayn" style="color:var(--acc)">0</span></h3>
+      <div class="stats">
+        <div class="stat"><div class="k">เสี่ยงติดเชื้อ S</div><div class="v" style="color:var(--s)" id="vS">0</div></div>
+        <div class="stat"><div class="k">ติดเชื้อ I</div><div class="v" style="color:var(--i)" id="vI">0</div></div>
+        <div class="stat"><div class="k">หายแล้ว R</div><div class="v" style="color:var(--r)" id="vR">0</div></div>
+        <div class="stat"><div class="k">ติดใหม่วันนี้</div><div class="v" style="color:var(--acc)" id="vN">0</div></div>
+        <div class="stat"><div class="k">ออกไปทำงาน</div><div class="v" id="vW">0</div></div>
+        <div class="stat"><div class="k">อยู่บ้าน</div><div class="v" id="vH">0</div></div>
+        <div class="stat"><div class="k">คู่สัมผัส</div><div class="v" id="vE">0</div></div>
+        <div class="stat"><div class="k">ข่าวเมื่อวาน</div><div class="v" style="color:var(--acc2)" id="vP">0%</div></div>
+      </div>
+      <canvas id="chart" height="420" style="margin-top:12px"></canvas>
+      <div class="sub" style="margin-top:6px">เส้น = จำนวน S / I / R รายวัน · แท่งสีส้ม = ผู้ติดเชื้อรายใหม่</div>
+    </div>
+
+    <div class="card">
+      <h3>บันทึกการตัดสินใจรายบุคคล</h3>
+      <div id="log"></div>
+    </div>
+
+    <div class="card">
+      <h3>Prompt ที่ส่งให้ LLM <span class="sub" id="who">— ยังไม่ได้เลือกคน</span></h3>
+      <pre class="prompt" id="prompt">คลิกที่จุดในแผนภาพ หรือคลิกแถวในบันทึกการตัดสินใจ เพื่อดูข้อความจริงที่ระบบประกอบขึ้นส่งให้โมเดล</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ================= คำอธิบาย ================= -->
+<h2>ระบบนี้ทำงานอย่างไร</h2>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+  <div class="card">
+    <h3>ภาพรวม: สองชั้นที่ป้อนกันไปกลับ</h3>
+    <p class="sub" style="margin-top:0">
+      ตัวแบบระบาดวิทยาทั่วไปกำหนด “พฤติกรรมคน” ด้วยสมการตายตัว แต่โปรเจกต์นี้ให้
+      <b>โมเดลภาษา (Gemini ผ่าน Google ADK)</b> สวมบทบาทเป็นชาวเมืองแต่ละคน แล้ว
+      <b>ตัดสินใจเองทุกวัน</b> ว่าจะออกไปทำงานหรืออยู่บ้าน
+    </p>
+    <ul>
+      <li><b class="k">ชั้นบน — Generative Agent:</b> ตัวตน + บุคลิก + อาการ + ข่าว → LLM → JSON <code>{"decision","reason"}</code></li>
+      <li><b class="k">ชั้นล่าง — Agent-Based Model:</b> เฉพาะคนที่ออกจากบ้านเท่านั้นที่จะพบปะกันและแพร่เชื้อได้</li>
+      <li><b class="k">ป้อนกลับ:</b> ผู้ติดเชื้อรายใหม่ → กลายเป็น “ข่าวเมื่อวาน” → เปลี่ยนการตัดสินใจของวันถัดไป</li>
+    </ul>
+    <div class="note">หัวใจของงานคือ <b>วงป้อนกลับ</b> นี้ — โรคเปลี่ยนพฤติกรรม แล้วพฤติกรรมย้อนกลับไปเปลี่ยนเส้นทางของโรค</div>
+  </div>
+
+  <div class="card">
+    <h3>ลูปหนึ่งวัน (<code>src/runner.py</code> → <code>run()</code>)</h3>
+    <table>
+      <tr><th>ขั้น</th><th>สิ่งที่เกิดขึ้น</th></tr>
+      <tr><td><b>1</b></td><td>คำนวณ <code>case_pct</code> จากคนที่เข้าวันที่ 4 ของโรคเมื่อวาน แล้วยิง prompt ถาม LLM <b>พร้อมกันทุกคน</b> ด้วย <code>asyncio.gather</code></td></tr>
+      <tr><td><b>2</b></td><td>คนที่ตอบ “go” เท่านั้นเข้าเครือข่ายสัมผัส แต่ละคนสุ่มคู่ <code>contact_rate</code> คน เก็บเป็นเส้นเชื่อมแบบไม่ซ้ำ</td></tr>
+      <tr><td><b>3</b></td><td>เส้นที่ปลายหนึ่งติดเชื้อ + อีกปลายยังไม่เคยติด → ทอยความน่าจะเป็น <code>infectivity</code></td></tr>
+      <tr><td><b>4</b></td><td>เดินนาฬิกาโรคของทุกคน คนที่เกิน 6 วันกลายเป็น “หายแล้ว” แล้วบันทึกสถิติของวัน</td></tr>
+    </table>
+    <p class="fine" style="margin-bottom:0">ถ้าไม่เหลือผู้ติดเชื้อเลย ระบบจะหยุดก่อนครบจำนวนวัน</p>
+  </div>
+
+  <div class="card">
+    <h3>เงื่อนไขการทดลอง 3 แบบ</h3>
+    <table>
+      <tr><th>เงื่อนไข</th><th>ข้อมูลที่ agent ได้รับ</th></tr>
+      <tr><td><b class="k">base</b></td><td>ชื่อ อายุ บุคลิก Big Five และเหตุผลที่ต้องทำงาน <span class="fine">— ไม่รู้ว่าตัวเองป่วย ไม่รู้ว่ามีโรคระบาด</span></td></tr>
+      <tr><td><b class="k">self</b></td><td>ข้างต้น <b>+ อาการของตัวเองวันนี้</b></td></tr>
+      <tr><td><b class="k">full</b></td><td>ข้างต้น <b>+ ข่าวหนังสือพิมพ์</b> ที่บอก % ผู้ติดเชื้อรายใหม่เมื่อวาน</td></tr>
+    </table>
+    <p class="sub" style="margin-bottom:0">ลองสลับเงื่อนไขแล้วกดเริ่มใหม่ จะเห็นว่ายิ่งให้ข้อมูลมาก ยอดผู้ติดเชื้อยิ่งแบนลง เพราะ agent เลือกกักตัวเอง</p>
+  </div>
+
+  <div class="card">
+    <h3>ไทม์ไลน์ของโรค (<code>src/disease.py</code>)</h3>
+    <table>
+      <tr><th>วันที่ติดเชื้อ</th><th>อาการ</th><th>แพร่เชื้อได้?</th></tr>
+      <tr><td>0</td><td>ปกติ (เพิ่งรับเชื้อ)</td><td class="fine">ไม่ได้</td></tr>
+      <tr><td>1–2</td><td>ปกติ — ไม่รู้ตัว</td><td style="color:var(--i)">ได้</td></tr>
+      <tr><td>3</td><td>ไอเล็กน้อย</td><td style="color:var(--i)">ได้</td></tr>
+      <tr><td>4–5</td><td>ไข้ + ไอ</td><td style="color:var(--i)">ได้</td></tr>
+      <tr><td>6</td><td>ไอเล็กน้อย</td><td style="color:var(--i)">ได้</td></tr>
+      <tr><td>7+</td><td>หายและมีภูมิคุ้มกัน</td><td class="fine">ไม่ได้</td></tr>
+    </table>
+    <p class="sub" style="margin-bottom:0">ช่วงวันที่ 1–2 คือจุดอันตราย: แพร่เชื้อได้แต่ยังไม่มีอาการ agent จึงยังตัดสินใจออกไปทำงานตามปกติ</p>
+  </div>
+
+  <div class="card">
+    <h3>โครงสร้างไฟล์</h3>
+    <table>
+      <tr><td><code>main.py</code></td><td>รับ argument จากบรรทัดคำสั่ง และสั่งรันทีละเงื่อนไข</td></tr>
+      <tr><td><code>src/config.py</code></td><td>ค่าตั้งต้นทั้งหมดของการรันหนึ่งครั้ง</td></tr>
+      <tr><td><code>src/traits.py</code></td><td>สุ่มชื่อ อายุ 18–64 และบุคลิก Big Five (ขั้วบวก/ลบ อย่างละ 50%)</td></tr>
+      <tr><td><code>src/person.py</code></td><td>สถานะของคนหนึ่งคน + คำนวณอาการจาก <code>infection_day</code></td></tr>
+      <tr><td><code>src/agent.py</code></td><td>ประกอบ prompt เรียก LlmAgent และแปลง JSON ที่ตอบกลับเป็น <code>Decision</code></td></tr>
+      <tr><td><code>src/world.py</code></td><td>สร้างเครือข่ายการสัมผัสและคำนวณการติดเชื้อรายใหม่</td></tr>
+      <tr><td><code>src/runner.py</code></td><td>ลูปหลักรายวัน + เขียนผลลง <code>summary_*.csv</code> และ <code>detail_*.json</code></td></tr>
+      <tr><td><code>plot_results.py</code></td><td>อ่าน CSV มาวาดกราฟเปรียบเทียบเงื่อนไข</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>วิธีรันของจริง</h3>
+    <pre class="prompt" style="max-height:none"># ทดสอบแบบไม่เรียก LLM (ใช้ MockDecisionAgent)
+python main.py --mock --population 20 --days 30
+
+# รันจริงด้วย Gemini (ต้องมี GOOGLE_API_KEY ใน .env)
+python main.py --condition full --population 30 --days 40
+
+# รันครบทั้งสามเงื่อนไขต่อกัน แล้ววาดกราฟ
+python main.py --all --population 20 --days 30
+python plot_results.py</pre>
+    <div class="note" style="margin-top:12px">
+      หน้าเว็บนี้จำลองการตัดสินใจด้วย <b>กฎ heuristic เดียวกับ <code>MockDecisionAgent</code></b>
+      เพื่อให้เล่นได้ทันทีในเบราว์เซอร์โดยไม่ต้องเรียก API — ตรรกะของโรค การสัมผัส และลำดับขั้นในหนึ่งวัน
+      ตรงกับโค้ด Python ทุกประการ ต่างกันเพียงตัวสุ่มคนละชุด ผลลัพธ์จึงไม่ตรงกันแบบตัวต่อตัวกับการรันจริง
+    </div>
+  </div>
+</div>
+
+<p class="fine" style="margin-top:26px">
+  อ้างอิง: Williams et al. (2023), “Epidemic Modeling with Generative Agents” (arXiv:2307.04986) — ไฟล์ PDF อยู่ในโฟลเดอร์โปรเจกต์
+</p>
+
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+/* ---------- ตัวสุ่มแบบกำหนด seed ได้ ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let rand = mulberry32(42);
+const pick = arr => arr[Math.floor(rand()*arr.length)];
+function sampleK(arr,k){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a.slice(0,k); }
+
+/* ---------- ข้อมูล persona (ตรงกับ src/traits.py) ---------- */
+const FIRST=["Alice","Bob","Carol","David","Eve","Frank","Grace","Henry","Iris","Jack","Kate","Liam","Maya","Noah","Olivia","Paul","Quinn","Rita","Sam","Tara","Uma","Victor","Wendy","Xander","Yara","Zack","Amy","Ben","Chloe","Dan","Emma","Finn","Gina","Hugo","Ivy","James","Kira","Leo","Mia","Nate","Opal","Pete","Ruby","Sean","Tina","Uri","Vera","Will","Xena","Yuri","Zoe","Anna","Brian","Cara","Derek","Elena","Fiona","Gabe","Hana","Isaac","Jill","Karl","Lena","Marco","Nora","Oscar","Priya","Roman","Sara","Tom","Ursula","Vince"];
+const LAST=["Smith","Johnson","Brown","Taylor","Anderson","Wilson","Moore","Martin","Lee","Perez","Thompson","White","Harris","Sanchez","Clark","Ramirez","Lewis","Robinson","Walker","Young","Allen","King","Wright","Scott","Torres","Nguyen","Hill","Green","Adams","Baker","Carter","Mitchell","Roberts","Turner"];
+const BIG5={
+  openness:["curious and open to new experiences","traditional and prefers familiar routines"],
+  conscientiousness:["organized, disciplined, and careful about rules","spontaneous, flexible, and casual about rules"],
+  extraversion:["outgoing, sociable, and energized by being around people","reserved, introverted, and prefers time alone"],
+  agreeableness:["warm, cooperative, and considerate of others' well-being","competitive, skeptical, and independent-minded"],
+  neuroticism:["sensitive to stress and easily worried about health risks","calm, emotionally stable, and slow to worry"]
+};
+const SYM={normal:"feels normal",cough:"has a light cough",fever:"has a fever and cough"};
+const SYM_TH={normal:"รู้สึกปกติ",cough:"ไอเล็กน้อย",fever:"มีไข้และไอ"};
+const DURATION=6, VIRUS="Catasat", TOWN="Dewberry Hollow";
+
+/* ---------- สถานะการจำลอง ---------- */
+let cfg, people, day, prevDay4, casePct, history, edges, newly, activeIds, selected=null, finished=false;
+
+function symptomOf(p){
+  if(p.health!=="I"||p.infDay===null) return "normal";
+  const d=p.infDay;
+  if(d===1||d===2) return "normal";
+  if(d===3||d===6) return "cough";
+  if(d===4||d===5) return "fever";
+  return "normal";
+}
+const infectious = p => p.health==="I" && p.infDay!==null && p.infDay>=1 && p.infDay<=DURATION;
+
+function readCfg(){
+  return {
+    cond:$("cond").value,
+    n:Math.max(5,Math.min(120,+$("pop").value||40)),
+    days:Math.max(5,+$("days").value||45),
+    cr:Math.max(1,+$("cr").value||5),
+    inf:Math.max(0.01,Math.min(1,+$("inf").value||0.1)),
+    i0:Math.max(1,+$("i0").value||1),
+    seed:+$("seed").value||42
+  };
+}
+
+function build(){
+  cfg=readCfg(); rand=mulberry32(cfg.seed);
+  const used=new Set(); people=[];
+  for(let i=0;i<cfg.n;i++){
+    let nm; for(let t=0;t<1000;t++){ nm=pick(FIRST)+" "+pick(LAST); if(!used.has(nm)) break; }
+    used.add(nm);
+    const traits={}; for(const k in BIG5) traits[k]= rand()<0.5?BIG5[k][0]:BIG5[k][1];
+    people.push({id:i,name:nm,age:18+Math.floor(rand()*47),traits,
+      health:"S",infDay:null,go:true,reason:"",x:0,y:0,tx:0,ty:0,flash:0});
+  }
+  sampleK(people.map(p=>p.id),Math.min(cfg.i0,cfg.n)).forEach(id=>{people[id].health="I";people[id].infDay=1;});
+  day=0; prevDay4=0; casePct=0; history=[]; edges=[]; newly=[]; activeIds=new Set();
+  finished=false; selected=null;
+  layout(true); $("log").innerHTML=""; setPipe(-1);
+  $("who").textContent="— ยังไม่ได้เลือกคน";
+  $("prompt").textContent="คลิกที่จุดในแผนภาพ หรือคลิกแถวในบันทึกการตัดสินใจ เพื่อดูข้อความจริงที่ระบบประกอบขึ้นส่งให้โมเดล";
+  refreshStats(); drawChart();
+}
+
+/* ---------- การตัดสินใจ (พอร์ตจาก MockDecisionAgent) ---------- */
+function decide(p){
+  const s=symptomOf(p);
+  if(cfg.cond==="self"||cfg.cond==="full"){
+    if(s==="fever")  return [false,"มีไข้ ขอพักอยู่บ้าน"];
+    if(s==="cough" && rand()<0.5) return [false,"ไอนิดหน่อย วันนี้ขอพัก"];
+  }
+  if(cfg.cond==="full" && casePct>0){
+    const worry = p.traits.neuroticism.includes("worried");
+    if(casePct >= (worry?2:8) && rand()<0.6) return [false,"ข่าวว่าผู้ป่วยเพิ่มขึ้น ขอกักตัวเอง"];
+  }
+  return [true,"รู้สึกสบายดี ไปทำงานตามปกติ"];
+}
+
+/* ---------- prompt (พอร์ตจาก build_prompt ใน src/agent.py) ---------- */
+function buildPrompt(p){
+  const L=[
+    `You are ${p.name}, ${p.age} years old, and you live in ${TOWN}.`,
+    `Your personality: ` + Object.entries(p.traits).map(([k,v])=>`${k}: ${v}`).join("; ") + `.`,
+    `${p.name} goes to work to earn money to support ${p.name}'s self.`
+  ];
+  if(cfg.cond==="self"||cfg.cond==="full") L.push(`Today, physically, ${p.name} ${SYM[symptomOf(p)]}.`);
+  if(cfg.cond==="full") L.push(`${p.name} knows about the ${VIRUS} virus spreading across the country. It is an infectious disease that spreads from human to human contact via an airborne virus. The deadliness of the virus is unknown. Scientists are warning about a potential epidemic. ${p.name} checks the newspaper and finds that ${casePct.toFixed(2)}% of ${TOWN}'s population caught new infections of the ${VIRUS} virus yesterday.`);
+  L.push(`Decide whether you will go to work today. Answer STRICTLY as JSON: {"decision": "go" | "stay", "reason": "..."}.`);
+  return L.join("\n");
+}
+function showPrompt(p){
+  selected=p.id;
+  $("who").textContent=`— ${p.name} (${p.age} ปี) · ${p.health==="I"?"ติดเชื้อวันที่ "+p.infDay:p.health==="R"?"หายแล้ว":"ยังไม่ติดเชื้อ"} · ${SYM_TH[symptomOf(p)]}`;
+  $("prompt").textContent=buildPrompt(p);
+  [...$("log").children].forEach(el=>el.classList.toggle("sel",+el.dataset.id===p.id));
+}
+
+/* ---------- สี่ขั้นของหนึ่งวัน ---------- */
+function phaseDecide(){
+  day++; casePct = 100*prevDay4/people.length;
+  activeIds=new Set();
+  for(const p of people){ const [go,rs]=decide(p); p.go=go; p.reason=rs; if(go) activeIds.add(p.id); }
+  layout(false); renderLog();
+  if(selected!==null) showPrompt(people[selected]);
+}
+function phaseContact(){
+  const act=people.filter(p=>activeIds.has(p.id));
+  edges=[];
+  if(act.length>=2){
+    const seen=new Set();
+    for(const p of act){
+      const others=act.filter(o=>o.id!==p.id);
+      for(const c of sampleK(others,Math.min(cfg.cr,others.length))){
+        const key=Math.min(p.id,c.id)+"-"+Math.max(p.id,c.id);
+        if(!seen.has(key)){ seen.add(key); edges.push([Math.min(p.id,c.id),Math.max(p.id,c.id)]); }
+      }
+    }
+  }
+  newly=[]; const got=new Set();
+  for(const [a,b] of edges){
+    const pa=people[a], pb=people[b]; let sus=null;
+    if(pa.health==="S"&&infectious(pb)) sus=pa; else if(pb.health==="S"&&infectious(pa)) sus=pb;
+    if(!sus||got.has(sus.id)) continue;
+    if(rand()<cfg.inf){ newly.push(sus.id); got.add(sus.id); }
+  }
+}
+function phaseTransmit(){
+  for(const id of newly){ const p=people[id]; if(p.health==="S"){ p.health="I"; p.infDay=0; p.flash=1; } }
+}
+function phaseUpdate(){
+  for(const p of people){
+    if(p.health==="I"&&p.infDay!==null){ p.infDay++; if(p.infDay>DURATION){ p.health="R"; p.infDay=null; } }
+  }
+  prevDay4 = people.filter(p=>p.health==="I"&&p.infDay===4).length;
+  const S=people.filter(p=>p.health==="S").length, I=people.filter(p=>p.health==="I").length,
+        R=people.filter(p=>p.health==="R").length;
+  history.push({day,S,I,R,n:newly.length,w:activeIds.size,pct:casePct});
+  refreshStats(); drawChart();
+  if(I===0&&day>1 || day>=cfg.days){ finished=true; stop(); }
+}
+
+/* ---------- ตำแหน่งบนผืนผ้าใบ ---------- */
+const cv=$("town"), ctx=cv.getContext("2d");
+let W=0,H=0, homeBox, workBox;
+function fitCanvas(){
+  const dpr=window.devicePixelRatio||1;
+  W=cv.clientWidth; H=470; cv.height=H*dpr; cv.width=W*dpr; cv.style.height=H+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  homeBox={x:16,y:44,w:W*0.36-24,h:H-64};
+  workBox={x:W*0.36+8,y:44,w:W*0.64-24,h:H-64};
+}
+function slot(box,i,total,pad){
+  const cols=Math.ceil(Math.sqrt(total*box.w/box.h))||1, rows=Math.ceil(total/cols);
+  const cw=(box.w-pad*2)/cols, ch=(box.h-pad*2)/rows;
+  return {x:box.x+pad+cw*((i%cols)+0.5), y:box.y+pad+ch*(Math.floor(i/cols)+0.5)};
+}
+function layout(snap){
+  const home=people.filter(p=>!p.go), work=people.filter(p=>p.go);
+  home.forEach((p,i)=>{const s=slot(homeBox,i,Math.max(home.length,1),18);p.tx=s.x;p.ty=s.y;});
+  work.forEach((p,i)=>{const s=slot(workBox,i,Math.max(work.length,1),22);p.tx=s.x;p.ty=s.y;});
+  if(snap) people.forEach(p=>{p.x=p.tx;p.y=p.ty;});
+}
+
+/* ---------- วาด ---------- */
+const COL={S:"#3b82f6",I:"#ef4444",R:"#22c55e"};
+let edgeReveal=0, phase=-1;
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // กล่องพื้นที่
+  const box=(b,label,c)=>{
+    ctx.fillStyle="#0d1729"; ctx.strokeStyle=c; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.roundRect(b.x,b.y,b.w,b.h,12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#93a5c0"; ctx.font="600 13px 'Noto Sans Thai',sans-serif";
+    ctx.fillText(label,b.x+12,b.y-10);
+  };
+  box(homeBox,"🏠 อยู่บ้าน (ไม่แพร่เชื้อ)","#243553");
+  box(workBox,"🏢 ออกไปทำงาน — เกิดการสัมผัสที่นี่","#35507e");
+
+  // เส้นสัมผัส
+  if(phase>=1 && edges.length){
+    const show=Math.floor(edges.length*edgeReveal);
+    for(let i=0;i<show;i++){
+      const [a,b]=edges[i], pa=people[a], pb=people[b];
+      const risky=(pa.health==="S"&&infectious(pb))||(pb.health==="S"&&infectious(pa));
+      ctx.strokeStyle= risky?"rgba(239,68,68,.55)":"rgba(120,150,200,.16)";
+      ctx.lineWidth= risky?1.6:1;
+      ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke();
+    }
+  }
+  // จุดคน
+  for(const p of people){
+    p.x+=(p.tx-p.x)*0.18; p.y+=(p.ty-p.y)*0.18;
+    if(p.flash>0){
+      ctx.strokeStyle=`rgba(245,158,11,${p.flash})`; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,7+18*(1-p.flash),0,7); ctx.stroke();
+      p.flash=Math.max(0,p.flash-0.02);
+    }
+    const sym=symptomOf(p);
+    if(sym!=="normal"){
+      ctx.strokeStyle= sym==="fever"?"rgba(255,255,255,.95)":"rgba(255,255,255,.45)";
+      ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,9.5,0,7); ctx.stroke();
+    }
+    if(p.id===selected){ ctx.strokeStyle="#f59e0b"; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.stroke(); }
+    ctx.fillStyle=COL[p.health];
+    ctx.beginPath(); ctx.arc(p.x,p.y,6.5,0,7); ctx.fill();
+    if(infectious(p)){ ctx.fillStyle="rgba(239,68,68,.18)";
+      ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.fill(); }
+  }
+  requestAnimationFrame(draw);
+}
+
+/* ---------- กราฟ ---------- */
+const ch=$("chart"), cx=ch.getContext("2d");
+function drawChart(){
+  const dpr=window.devicePixelRatio||1, w=ch.clientWidth, h=150;
+  ch.width=w*dpr; ch.height=h*dpr; ch.style.height=h+"px"; cx.setTransform(dpr,0,0,dpr,0,0);
+  cx.clearRect(0,0,w,h);
+  const pad={l:30,r:8,t:10,b:18}, gw=w-pad.l-pad.r, gh=h-pad.t-pad.b;
+  cx.strokeStyle="#243553"; cx.lineWidth=1;
+  cx.beginPath(); cx.moveTo(pad.l,pad.t); cx.lineTo(pad.l,pad.t+gh); cx.lineTo(pad.l+gw,pad.t+gh); cx.stroke();
+  cx.fillStyle="#64748b"; cx.font="10px 'JetBrains Mono',monospace";
+  cx.fillText(String(cfg.n),4,pad.t+8); cx.fillText("0",4,pad.t+gh);
+  if(history.length<1) return;
+  const N=Math.max(cfg.days,history.length), X=i=>pad.l+gw*(i/(N-1||1)), Y=v=>pad.t+gh*(1-v/cfg.n);
+  cx.fillStyle="rgba(245,158,11,.55)";
+  history.forEach((r,i)=>{ if(r.n>0){ const bh=gh*(r.n/cfg.n); cx.fillRect(X(i)-1.5,pad.t+gh-bh,3,bh);} });
+  for(const [k,c] of [["S",COL.S],["R",COL.R],["I",COL.I]]){
+    cx.strokeStyle=c; cx.lineWidth=2; cx.beginPath();
+    history.forEach((r,i)=> i?cx.lineTo(X(i),Y(r[k])):cx.moveTo(X(i),Y(r[k])));
+    cx.stroke();
+  }
+  cx.fillStyle="#64748b"; cx.fillText("วันที่ "+history.length,pad.l+2,h-5);
+}
+
+/* ---------- UI ---------- */
+function refreshStats(){
+  const S=people.filter(p=>p.health==="S").length, I=people.filter(p=>p.health==="I").length,
+        R=people.filter(p=>p.health==="R").length;
+  $("dayn").textContent=day; $("vS").textContent=S; $("vI").textContent=I; $("vR").textContent=R;
+  $("vN").textContent=newly.length; $("vW").textContent=activeIds.size;
+  $("vH").textContent=people.length-activeIds.size; $("vE").textContent=edges.length;
+  $("vP").textContent=casePct.toFixed(1)+"%";
+}
+function renderLog(){
+  const rows=people.map(p=>
+    `<div class="row${p.id===selected?" sel":""}" data-id="${p.id}">
+       <span class="pill ${p.go?"go":"stay"}">${p.go?"ไป":"อยู่บ้าน"}</span>
+       <span class="nm">${p.name}</span><span class="rs">${p.reason}</span></div>`).join("");
+  const el=$("log"); el.innerHTML=rows;
+  el.querySelectorAll(".row").forEach(r=>r.onclick=()=>showPrompt(people[+r.dataset.id]));
+}
+function setPipe(k){ for(let i=0;i<4;i++) $("p"+i).classList.toggle("on",i===k); }
+
+/* ---------- วงจรอนิเมชัน ---------- */
+let timer=null, playing=false;
+const DUR=[750,900,550,500];
+function runDay(cb){
+  phase=0; setPipe(0); phaseDecide();
+  const speed=+$("spd").value;
+  timer=setTimeout(()=>{
+    phase=1; setPipe(1); phaseContact(); edgeReveal=0; refreshStats();
+    const t0=performance.now(), d=DUR[1]/speed;
+    (function grow(){ edgeReveal=Math.min(1,(performance.now()-t0)/d);
+      if(edgeReveal<1 && playing!==null) requestAnimationFrame(grow); })();
+    timer=setTimeout(()=>{
+      phase=2; setPipe(2); phaseTransmit(); refreshStats();
+      timer=setTimeout(()=>{
+        phase=3; setPipe(3); phaseUpdate(); layout(false);
+        timer=setTimeout(()=>{ edges=[]; setPipe(-1); phase=-1; cb&&cb(); },DUR[3]/speed);
+      },DUR[2]/speed);
+    },DUR[1]/speed);
+  },DUR[0]/speed);
+}
+function loop(){ if(!playing||finished){stop();return;} runDay(()=>loop()); }
+function stop(){ playing=false; clearTimeout(timer); $("play").textContent= finished?"▶ เริ่มใหม่":"▶ เล่นต่อ"; setPipe(-1); }
+
+$("play").onclick=()=>{
+  if(playing){ stop(); $("play").textContent="▶ เล่นต่อ"; return; }
+  if(finished||day>=cfg.days) build();
+  playing=true; $("play").textContent="⏸ หยุดชั่วคราว"; loop();
+};
+$("step").onclick=()=>{ if(playing) stop(); if(finished) build(); clearTimeout(timer); runDay(); };
+$("reset").onclick=()=>{ stop(); build(); $("play").textContent="▶ เริ่ม"; };
+["cond","pop","days","cr","inf","i0","seed"].forEach(id=>$(id).onchange=()=>{ stop(); build(); $("play").textContent="▶ เริ่ม"; });
+$("spd").oninput=()=>$("spdv").textContent=(+$("spd").value).toFixed(2)+"×";
+
+/* hover / click บนผืนผ้าใบ */
+const tip=$("tip");
+cv.addEventListener("mousemove",e=>{
+  const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  let hit=null;
+  for(const p of people) if((p.x-mx)**2+(p.y-my)**2 < 144){ hit=p; break; }
+  if(hit){
+    const st=hit.health==="I"?`ติดเชื้อ (วันที่ ${hit.infDay})`:hit.health==="R"?"หายแล้ว มีภูมิ":"ยังไม่ติดเชื้อ";
+    tip.innerHTML=`<b>${hit.name}</b> · ${hit.age} ปี<br>สถานะ: ${st}<br>อาการ: ${SYM_TH[symptomOf(hit)]}<br>
+      วันนี้: <b style="color:${hit.go?'#93c5fd':'#fdba74'}">${hit.go?"ออกไปทำงาน":"อยู่บ้าน"}</b><br>
+      <span style="color:#93a5c0">“${hit.reason||"—"}”</span>`;
+    tip.style.opacity=1;
+    tip.style.left=Math.min(mx+14,cv.clientWidth-260)+"px"; tip.style.top=(my+14)+"px";
+  } else tip.style.opacity=0;
+});
+cv.addEventListener("mouseleave",()=>tip.style.opacity=0);
+cv.addEventListener("click",e=>{
+  const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  for(const p of people) if((p.x-mx)**2+(p.y-my)**2 < 144){ showPrompt(p); return; }
+});
+
+window.addEventListener("resize",()=>{ fitCanvas(); layout(true); drawChart(); });
+fitCanvas(); build(); draw();
+</script>
+</body>
+</html>
