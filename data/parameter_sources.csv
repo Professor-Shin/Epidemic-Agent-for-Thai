@@ -1,0 +1,29 @@
+variable,value,source,status
+beta0,0.2,Aoki & Ghaffarzadegan 2026,literature
+latent_days,4,Aoki & Ghaffarzadegan 2026,literature
+infectious_days,10,Aoki & Ghaffarzadegan 2026,literature
+symptomatic_frac,0.7,,assumption
+"N, initial fractions",1000000,synthetic population,assumption
+contacts_home_adult,4.98,"Prem et al. 2021, THA",data
+contacts_work_adult,3.857,"Prem et al. 2021, THA",data
+contacts_school_adult,0.037,"Prem et al. 2021, THA",data
+contacts_others_adult,5.147,"Prem et al. 2021, THA",data
+employment_rate,0.67,replace with NSO LFS employment-to-population ratio 20-64,assumption
+f_work_other,0.3,,assumption
+f_errand,0.5,,assumption
+f_visit,0.3,,assumption
+f_visit_home,0.5,,assumption
+baseline_mix,"{""stay_home"": 0.2, ""work_onsite"": 0.55, ""essential_errand"": 0.15, ""visit_family"": 0.1}",,assumption
+age_groups_20_64,"{""20-29"": 0.2149, ""30-39"": 0.2059, ""40-49"": 0.2435, ""50-64"": 0.3357}",UN WPP 2020,data
+household_size,"{""1"": 0.15, ""2"": 0.25, ""3"": 0.25, ""4"": 0.2, ""5+"": 0.15}",replace with Census 2020,assumption
+p_high_risk_member,0.35,,assumption
+"risk_perception, trust_health_info",see base.yaml,,assumption
+occupation_share_agri,0.28,"Replace share with NSO Labour Force Survey: employed persons by industry (agriculture), ages 20-64",assumption
+occupation_share_manuf,0.18,Replace with NSO LFS manufacturing + construction share,assumption
+occupation_share_trade,0.2,Replace with NSO LFS wholesale/retail + accommodation/food share; informal share from NSO informal employment survey,assumption
+occupation_share_office,0.12,Replace with NSO LFS professional/clerical occupations; WFH ability: literature range for Thailand if available,assumption
+occupation_share_public,0.08,Replace with NSO LFS public administration + education + health share,assumption
+occupation_share_notwork,0.14,"Replace with NSO LFS persons outside the labour force, ages 20-64",assumption
+policy_k,0.8,Aoki & Ghaffarzadegan 2026,literature
+policy_alpha,0.0005,Aoki & Ghaffarzadegan 2026,literature
+policy_levels_d,"{""open"": 0.0, ""limited"": 0.4, ""strict"": 0.8}",bounded by OxCGRT THA stringency range,assumption

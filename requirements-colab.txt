@@ -1,0 +1,10 @@
+# Installed by the setup cell of each notebook on Colab. numpy/pandas/scipy/matplotlib/torch are preinstalled there.
+# Minimum versions are given instead of exact pins because Colab's base image changes; every run records the
+# versions it actually used in outputs/runs/<run_id>/runtime.json.
+pyyaml>=6.0
+rdata>=0.11
+transformers>=4.45
+accelerate>=0.33
+bitsandbytes>=0.43
+# Optional faster backend (set llm.backend: vllm). Installing it replaces torch and needs a runtime restart.
+# vllm>=0.6

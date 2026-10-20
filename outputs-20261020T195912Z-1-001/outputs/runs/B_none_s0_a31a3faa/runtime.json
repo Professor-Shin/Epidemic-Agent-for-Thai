@@ -1,0 +1,13 @@
+{
+ "total_seconds": 0.3113420009613037,
+ "days": 180,
+ "n_agents": 0,
+ "env": {
+  "python": "3.13.5",
+  "platform": "Windows-11-10.0.22631-SP0",
+  "numpy": "2.5.3",
+  "pandas": "3.0.6",
+  "scipy": "1.18.1",
+  "gpu": null
+ }
+}

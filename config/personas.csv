@@ -1,0 +1,41 @@
+agent_id,group,occupation,age_group,p_can_wfh,wfh_u,can_wfh,income_loss,essential_worker,household_size,high_risk_member,risk_perception,trust_health_info,weight
+0,agri,farmer or fisher (own account),40-49,0.0,0.17893481367543618,False,high,True,3,False,medium,high,0.025454545454545455
+1,agri,farmer or fisher (own account),20-29,0.0,0.9051438366771739,False,high,True,4,True,high,high,0.025454545454545455
+2,agri,farmer or fisher (own account),50-64,0.0,0.6358708041446514,False,high,True,3,False,medium,medium,0.025454545454545455
+3,agri,farmer or fisher (own account),30-39,0.0,0.27789921550015906,False,high,True,3,False,medium,low,0.025454545454545455
+4,agri,farmer or fisher (own account),30-39,0.0,0.4477019015387208,False,high,True,2,False,medium,medium,0.025454545454545455
+5,agri,farmer or fisher (own account),50-64,0.0,0.20941612123621955,False,high,True,4,False,medium,high,0.025454545454545455
+6,agri,farmer or fisher (own account),40-49,0.0,0.5633773745025455,False,high,True,5+,True,medium,medium,0.025454545454545455
+7,agri,farmer or fisher (own account),50-64,0.0,0.2615530463118,False,high,True,2,False,medium,low,0.025454545454545455
+8,agri,farmer or fisher (own account),40-49,0.0,0.7312406583584447,False,high,True,3,False,medium,medium,0.025454545454545455
+9,agri,farmer or fisher (own account),50-64,0.0,0.46997091240616984,False,high,True,3,False,low,high,0.025454545454545455
+10,agri,farmer or fisher (own account),30-39,0.0,0.5193842211443356,False,high,True,3,True,high,high,0.025454545454545455
+11,manuf,factory or construction worker,30-39,0.03,0.05873521751558297,False,high,False,4,True,medium,medium,0.025714285714285714
+12,manuf,factory or construction worker,50-64,0.03,0.7742121576308749,False,high,False,5+,False,low,high,0.025714285714285714
+13,manuf,factory or construction worker,30-39,0.03,0.023632428671776062,True,high,False,2,False,medium,low,0.025714285714285714
+14,manuf,factory or construction worker,40-49,0.03,0.012857887744930352,True,high,False,3,False,medium,high,0.025714285714285714
+15,manuf,factory or construction worker,20-29,0.03,0.9183968578705968,False,high,False,5+,False,medium,high,0.025714285714285714
+16,manuf,factory or construction worker,50-64,0.03,0.5460602299006425,False,high,False,2,False,high,low,0.025714285714285714
+17,manuf,factory or construction worker,30-39,0.03,0.615508274358867,False,high,False,4,True,medium,high,0.025714285714285714
+18,trade,"market vendor, shop or food-stall worker",30-39,0.05,0.6283478623630906,False,high,False,4,True,medium,low,0.025
+19,trade,"market vendor, shop or food-stall worker",20-29,0.05,0.2799917441958927,False,high,False,1,False,low,medium,0.025
+20,trade,"market vendor, shop or food-stall worker",50-64,0.05,0.659569533072841,False,high,False,2,True,medium,low,0.025
+21,trade,"market vendor, shop or food-stall worker",50-64,0.05,0.6631833646572645,False,high,False,3,False,high,high,0.025
+22,trade,"market vendor, shop or food-stall worker",50-64,0.05,0.7450348866476518,False,high,False,2,False,high,high,0.025
+23,trade,"market vendor, shop or food-stall worker",50-64,0.05,0.34378554600189437,False,high,False,3,False,low,medium,0.025
+24,trade,"market vendor, shop or food-stall worker",30-39,0.05,0.9634847481204788,False,high,False,1,False,low,medium,0.025
+25,trade,"market vendor, shop or food-stall worker",30-39,0.05,0.9144561221029246,False,high,False,3,True,medium,low,0.025
+26,office,office or professional employee,40-49,0.6,0.7898093832755049,False,low,False,2,False,medium,medium,0.024
+27,office,office or professional employee,50-64,0.6,0.24062604181377323,True,low,False,2,True,high,low,0.024
+28,office,office or professional employee,40-49,0.6,0.12046907762387415,True,low,False,2,True,medium,high,0.024
+29,office,office or professional employee,20-29,0.6,0.9363122242578448,False,low,False,5+,True,high,medium,0.024
+30,office,office or professional employee,50-64,0.6,0.7178343572828981,False,low,False,5+,False,low,high,0.024
+31,public,"teacher, health or public-service worker",20-29,0.15,0.7392607956370342,False,low,True,4,True,low,medium,0.02666666666666667
+32,public,"teacher, health or public-service worker",40-49,0.15,0.46188359707756765,False,low,True,3,False,high,low,0.02666666666666667
+33,public,"teacher, health or public-service worker",30-39,0.15,0.28879164900942544,False,low,True,4,False,low,high,0.02666666666666667
+34,notwork,"not in paid work (homemaker, unemployed, early retired)",50-64,1.0,0.7715370379067442,True,medium,False,1,True,high,high,0.023333333333333334
+35,notwork,"not in paid work (homemaker, unemployed, early retired)",40-49,1.0,0.20557265759667276,True,medium,False,2,False,low,medium,0.023333333333333334
+36,notwork,"not in paid work (homemaker, unemployed, early retired)",50-64,1.0,0.27068090144591017,True,medium,False,3,True,medium,medium,0.023333333333333334
+37,notwork,"not in paid work (homemaker, unemployed, early retired)",40-49,1.0,0.6373601174260564,True,medium,False,3,True,medium,high,0.023333333333333334
+38,notwork,"not in paid work (homemaker, unemployed, early retired)",50-64,1.0,0.5529869643862163,True,medium,False,1,True,high,medium,0.023333333333333334
+39,notwork,"not in paid work (homemaker, unemployed, early retired)",30-39,1.0,0.4875580786370386,True,medium,False,2,False,medium,medium,0.023333333333333334

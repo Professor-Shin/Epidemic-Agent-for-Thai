@@ -1,0 +1,179 @@
+{
+ "condition": "B",
+ "model_key": null,
+ "seed": 0,
+ "tag": "sens_f_errand=0.7",
+ "backend": null,
+ "cfg": {
+  "project": "ThaiGABM-SEIR",
+  "population": {
+   "N": 1000000,
+   "initial_exposed_frac": 0.002,
+   "initial_infectious_frac": 0.002,
+   "initial_recovered_frac": 0.0
+  },
+  "disease": {
+   "beta0": 0.2,
+   "latent_days": 4,
+   "infectious_days": 10,
+   "symptomatic_frac": 0.7
+  },
+  "sim": {
+   "days": 30,
+   "n_agents": 40,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "persona_seed": 2026
+  },
+  "personas": {
+   "marginals": "config/persona_marginals.csv",
+   "file": "config/personas.csv",
+   "age_groups": {
+    "20-29": 0.21,
+    "30-39": 0.21,
+    "40-49": 0.25,
+    "50-64": 0.33
+   },
+   "household_size": {
+    "1": 0.15,
+    "2": 0.25,
+    "3": 0.25,
+    "4": 0.2,
+    "5+": 0.15
+   },
+   "p_high_risk_member": 0.35,
+   "risk_perception": {
+    "low": 0.3,
+    "medium": 0.4,
+    "high": 0.3
+   },
+   "trust_health_info": {
+    "low": 0.2,
+    "medium": 0.4,
+    "high": 0.4
+   }
+  },
+  "actions": {
+   "stay_home": "stay home or work from home today",
+   "work_onsite": "go to your workplace or school in person",
+   "essential_errand": "go out only for essential shopping or errands",
+   "visit_family": "visit relatives or meet another household"
+  },
+  "contacts": {
+   "file": "data/processed/contact_by_location_TH.csv",
+   "column": "adult_20_64",
+   "employment_rate": 0.67,
+   "f_work_other": 0.3,
+   "f_errand": 0.7,
+   "f_visit": 0.3,
+   "f_visit_home": 0.5,
+   "baseline_mix": {
+    "stay_home": 0.2,
+    "work_onsite": 0.55,
+    "essential_errand": 0.15,
+    "visit_family": 0.1
+   }
+  },
+  "policy": {
+   "k": 0.8,
+   "alpha": 0.0005,
+   "leader_every_days": 7,
+   "initial_level": "open",
+   "levels": {
+    "open": {
+     "d": 0.0,
+     "text": "No restrictions. Normal activities are allowed.",
+     "banned": []
+    },
+    "limited": {
+     "d": 0.4,
+     "text": "Gatherings are limited, employers are asked to allow work from home, masks are required in public places.",
+     "banned": []
+    },
+    "strict": {
+     "d": 0.8,
+     "text": "Stay-at-home advisory: only essential work and essential errands are allowed. Visits to other households are not allowed.",
+     "banned": [
+      "visit_family"
+     ]
+    }
+   }
+  },
+  "llm": {
+   "backend": "transformers",
+   "temperature": 0.7,
+   "top_p": 0.9,
+   "max_new_tokens": 64,
+   "batch_size": 40,
+   "max_prompt_tokens": 1024,
+   "retry_invalid": 1,
+   "models": {
+    "typhoon8b": {
+     "hf_id": "scb10x/llama3.1-typhoon2-8b-instruct",
+     "vllm_id": null,
+     "gated": false
+    },
+    "qwen7b": {
+     "hf_id": "Qwen/Qwen2.5-7B-Instruct",
+     "vllm_id": "Qwen/Qwen2.5-7B-Instruct-AWQ",
+     "gated": false
+    },
+    "llama8b": {
+     "hf_id": "meta-llama/Llama-3.1-8B-Instruct",
+     "vllm_id": "hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4",
+     "gated": true
+    },
+    "mistral7b": {
+     "hf_id": "mistralai/Mistral-7B-Instruct-v0.3",
+     "vllm_id": null,
+     "gated": false
+    },
+    "qwen1_5b": {
+     "hf_id": "Qwen/Qwen2.5-1.5B-Instruct",
+     "vllm_id": null,
+     "gated": false
+    }
+   },
+   "compare": [
+    "qwen7b",
+    "llama8b"
+   ]
+  },
+  "sensitivity": {
+   "w_home_scale": [
+    0.5,
+    1.0,
+    1.5
+   ],
+   "f_errand": [
+    0.3,
+    0.5,
+    0.7
+   ],
+   "f_visit": [
+    0.15,
+    0.3,
+    0.5
+   ],
+   "wfh_scale": [
+    0.5,
+    1.0,
+    1.5
+   ]
+  }
+ },
+ "contacts": {
+  "c_out": {
+   "stay_home": 0.0,
+   "work_onsite": 7.35608707918036,
+   "essential_errand": 3.6028318716351095,
+   "visit_family": 4.033880686228217
+  },
+  "home": 4.979619768197769,
+  "w_home": 0.4994964042436
+ },
+ "personas": null
+}

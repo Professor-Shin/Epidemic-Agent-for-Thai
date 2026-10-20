@@ -1,0 +1,7 @@
+group,label,share,p_can_wfh,income_loss,essential_worker,status,source_note
+agri,"farmer or fisher (own account)",0.28,0.00,high,true,assumption,"Replace share with NSO Labour Force Survey: employed persons by industry (agriculture), ages 20-64"
+manuf,"factory or construction worker",0.18,0.03,high,false,assumption,"Replace with NSO LFS manufacturing + construction share"
+trade,"market vendor, shop or food-stall worker",0.20,0.05,high,false,assumption,"Replace with NSO LFS wholesale/retail + accommodation/food share; informal share from NSO informal employment survey"
+office,"office or professional employee",0.12,0.60,low,false,assumption,"Replace with NSO LFS professional/clerical occupations; WFH ability: literature range for Thailand if available"
+public,"teacher, health or public-service worker",0.08,0.15,low,true,assumption,"Replace with NSO LFS public administration + education + health share"
+notwork,"not in paid work (homemaker, unemployed, early retired)",0.14,1.00,medium,false,assumption,"Replace with NSO LFS persons outside the labour force, ages 20-64"

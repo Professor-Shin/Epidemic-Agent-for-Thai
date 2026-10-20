@@ -1,8 +1,14 @@
+# Large raw data — re-downloadable by notebook 00 (see README)
+data/raw/
+
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
-.env
-*.egg-info/
+*.py[cod]
+.ipynb_checkpoints/
 .venv/
 venv/
-.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

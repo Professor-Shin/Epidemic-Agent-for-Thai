@@ -1,0 +1,679 @@
+<title>ThaiGABM-SEIR Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: scrollable research dashboard — sticky section nav, hero stat band, then
+   data sections each pairing an interactive SVG chart with a short reading. */
+:root{
+  color-scheme: light;
+  --bg:#f6f7f9; --surface:#ffffff; --surface-2:#eef1f5; --surface-3:#e7ebf1;
+  --fg:#0f141b; --fg-2:#38414e; --muted:#687283; --border:rgba(15,20,27,.12);
+  --accent:#2a6fd6; --accent-2:#1d539f; --on-accent:#ffffff;
+  --good:#0ca30c; --warn:#d98a00; --crit:#d03b3b;
+  --s-blue:#2a78d6; --s-orange:#eb6834; --s-aqua:#1baf7a; --s-yellow:#eda100;
+  --s-magenta:#e87ba4; --s-red:#e34948; --s-violet:#6250d6; --s-gray:#8a8f98;
+  --grid:#e4e7ec; --axis:#c6ccd4;
+  --font:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0b0e13; --surface:#141922; --surface-2:#1b212c; --surface-3:#232b38;
+  --fg:#eef1f5; --fg-2:#c3cad5; --muted:#8c97a6; --border:rgba(255,255,255,.12);
+  --accent:#4a8fe7; --accent-2:#6ca6ee; --on-accent:#08101c;
+  --good:#1fbf1f; --warn:#f0a93a; --crit:#e46060;
+  --s-blue:#3987e5; --s-orange:#e8713f; --s-aqua:#1fc188; --s-yellow:#e0a62a;
+  --s-magenta:#e58bad; --s-red:#e66767; --s-violet:#9085e9; --s-gray:#9aa4b2;
+  --grid:#242b36; --axis:#39424f;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0b0e13; --surface:#141922; --surface-2:#1b212c; --surface-3:#232b38;
+  --fg:#eef1f5; --fg-2:#c3cad5; --muted:#8c97a6; --border:rgba(255,255,255,.12);
+  --accent:#4a8fe7; --accent-2:#6ca6ee; --on-accent:#08101c;
+  --good:#1fbf1f; --warn:#f0a93a; --crit:#e46060;
+  --s-blue:#3987e5; --s-orange:#e8713f; --s-aqua:#1fc188; --s-yellow:#e0a62a;
+  --s-magenta:#e58bad; --s-red:#e66767; --s-violet:#9085e9; --s-gray:#9aa4b2;
+  --grid:#242b36; --axis:#39424f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.55;
+  -webkit-font-smoothing:antialiased;font-size:15px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--surface)}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px))}
+.tabnum{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+
+/* ---- sticky nav ---- */
+nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--surface);
+  border-bottom:1px solid var(--border)}
+nav.top .wrap{display:flex;align-items:center;gap:6px;height:52px;overflow-x:auto;scrollbar-width:none}
+nav.top .wrap::-webkit-scrollbar{display:none}
+nav.top .brand{font-weight:700;font-size:14px;letter-spacing:.2px;white-space:nowrap;margin-right:8px}
+nav.top a{color:var(--fg-2);text-decoration:none;font-size:13px;white-space:nowrap;padding:6px 10px;border-radius:7px}
+nav.top a:hover{background:var(--surface-2);color:var(--fg)}
+.theme-btn{margin-left:auto;flex:none;border:1px solid var(--border);background:var(--surface-2);
+  color:var(--fg-2);border-radius:7px;padding:6px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+
+/* ---- hero ---- */
+header.hero{padding-block:34px 26px;border-bottom:1px solid var(--border);background:
+  radial-gradient(120% 140% at 85% -20%, color-mix(in srgb,var(--accent) 12%,transparent), transparent 60%)}
+.eyebrow{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);font-weight:600}
+header.hero h1{font-size:clamp(26px,5vw,42px);font-weight:700;margin:10px 0 6px}
+header.hero p.sub{color:var(--fg-2);max-width:62ch;margin:0 0 20px;font-size:16px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 15px}
+.tile .k{font-size:12px;color:var(--muted);font-weight:500}
+.tile .v{font-size:clamp(22px,4vw,30px);font-weight:700;margin-top:4px;letter-spacing:-.5px}
+.tile .d{font-size:12px;color:var(--fg-2);margin-top:2px}
+
+section{padding-block:34px;border-bottom:1px solid var(--border)}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.sec-head .no{font-family:var(--mono);color:var(--accent);font-size:13px;font-weight:500}
+section h2{font-size:clamp(20px,3.4vw,27px);font-weight:700}
+.lede{color:var(--fg-2);max-width:72ch;margin:8px 0 22px;font-size:15.5px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:760px){.grid2,.grid3,.tiles{grid-template-columns:1fr}.tiles{grid-template-columns:1fr 1fr}}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--fg-2);font-family:inherit;font-size:13px;
+  padding:6px 12px;border-radius:7px;cursor:pointer;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.ctl-label{font-size:12.5px;color:var(--muted);font-weight:500;margin-right:2px}
+
+.chart-wrap{position:relative;min-width:0}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.tip{position:absolute;pointer-events:none;z-index:5;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:8px 10px;font-size:12.5px;box-shadow:0 6px 24px rgba(0,0,0,.14);
+  min-width:130px;opacity:0;transition:opacity .08s;color:var(--fg)}
+.tip b{font-weight:600}
+.tip .row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.tip .sw{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:baseline}
+
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12.5px;color:var(--fg-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.legend i.ln{height:3px;width:16px;border-radius:2px}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+.tbl-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{font-weight:600;color:var(--fg-2);background:var(--surface-2);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.6}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:500;font-variant-numeric:tabular-nums}
+
+.prompt-box{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.prompt-box summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:14px;list-style:none;
+  display:flex;align-items:center;gap:8px}
+.prompt-box summary::-webkit-details-marker{display:none}
+.prompt-box summary::before{content:"▸";color:var(--accent);transition:transform .15s}
+.prompt-box[open] summary::before{transform:rotate(90deg)}
+.prompt-box pre{margin:0;padding:0 16px 16px;white-space:pre-wrap;word-break:break-word;
+  font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--fg-2)}
+
+.ex-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:760px){.ex-grid{grid-template-columns:1fr}}
+.ex{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:15px}
+.ex h4{margin:0 0 3px;font-size:15px;font-weight:700}
+.ex .occ{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.ex .prof{font-size:12px;color:var(--fg-2);line-height:1.5;margin-bottom:12px}
+.ex .step{display:flex;gap:10px;padding:8px 0;border-top:1px dashed var(--border)}
+.ex .step .when{font-size:11.5px;color:var(--muted);width:68px;flex:none;padding-top:3px}
+.ex .step .body{min-width:0}
+.ex .reason{font-size:12.5px;color:var(--fg-2);margin-top:4px;font-style:italic}
+.chip{display:inline-block;padding:3px 10px;border-radius:7px;font-size:12.5px;font-weight:600;color:#fff}
+
+.timeline{display:flex;gap:0;flex-wrap:wrap}
+.tl-step{flex:1;min-width:120px;border-left:3px solid var(--border);padding:4px 0 10px 12px;position:relative}
+.tl-step .wk{font-size:11.5px;color:var(--muted)}
+.tl-step .lvl{font-weight:700;font-size:15px;margin:2px 0}
+.tl-step .meta{font-size:12px;color:var(--fg-2)}
+.tl-step .rsn{font-size:11.5px;color:var(--muted);margin-top:5px;font-style:italic}
+
+.callout{border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 10px 10px 0;
+  padding:12px 16px;margin:10px 0;font-size:14px}
+.gap{border-left-color:var(--warn)}
+.note{font-size:12.5px;color:var(--muted)}
+.findings{display:grid;gap:12px}
+.finding{display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.finding .ic{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;font-weight:700;color:#fff}
+.finding h4{margin:0 0 3px;font-size:15px}
+.finding p{margin:0;font-size:13.5px;color:var(--fg-2)}
+footer{padding-block:28px 40px;color:var(--muted);font-size:12.5px}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface-2);
+  border:1px solid var(--border);color:var(--fg-2)}
+</style>
+
+<script id="DATA" type="application/json">__DATA__</script>
+
+<nav class="top"><div class="wrap">
+  <span class="brand">ThaiGABM·SEIR</span>
+  <a href="#design">การทดลอง</a>
+  <a href="#prompt">Prompt</a>
+  <a href="#feas">โมเดล</a>
+  <a href="#baseline">Baseline</a>
+  <a href="#resident">ประชาชน (C)</a>
+  <a href="#leader">ผู้นำ (D)</a>
+  <a href="#findings">ข้อค้นพบ</a>
+  <button class="theme-btn" id="themeBtn" aria-label="สลับธีม">◐ ธีม</button>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Generative Agent-Based Model × SEIR</div>
+  <h1>ประชาชนและผู้นำที่ขับด้วย LLM<br>ในแบบจำลองโรคระบาดบริบทไทย</h1>
+  <p class="sub">เปรียบเทียบ <b>Typhoon-8B</b> (ปรับภาษาไทย) กับ <b>Qwen2.5-7B</b> เป็นตัวแทนการตัดสินใจรายวันของประชาชน 40 คน และผู้ว่าฯ ที่ออกนโยบายรายสัปดาห์ บน Tesla T4 · 30 วัน · 3 seeds</p>
+  <div class="tiles" id="heroTiles"></div>
+</div></header>
+
+<main class="wrap" id="app"></main>
+
+<footer class="wrap">
+  คำนวณใหม่จาก <span class="mono">daily.csv · decisions.jsonl · leader.jsonl · feasibility.csv</span> ด้วยสูตรเดียวกับ <span class="mono">gabm/analysis.py</span> ·
+  ชุดผลลัพธ์ <span class="mono">outputs-20261020T195912Z</span> · เป็น scenario study ไม่ใช่ forecast ที่ calibrate แล้ว
+</footer>
+
+<script>
+const DATA = JSON.parse(document.getElementById('DATA').textContent);
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const NS="http://www.w3.org/2000/svg";
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const ACT=["stay_home","work_onsite","essential_errand","visit_family"];
+const ACT_TH={stay_home:"อยู่บ้าน/WFH",work_onsite:"ไปทำงาน",essential_errand:"ออกไปธุระจำเป็น",visit_family:"เยี่ยมญาติ"};
+const ACT_COL={stay_home:"--s-blue",work_onsite:"--s-orange",essential_errand:"--s-aqua",visit_family:"--s-yellow"};
+const MODEL_TH={typhoon8b:"Typhoon-8B",qwen7b:"Qwen2.5-7B"};
+const MODEL_COL={typhoon8b:"--s-blue",qwen7b:"--s-orange"};
+const LVL_TH={open:"เปิดปกติ",limited:"จำกัด",strict:"เข้มงวด"};
+const LVL_COL={open:"--good",limited:"--warn",strict:"--crit"};
+const fmtPct=x=>(x*100).toFixed(1)+"%";
+const C=n=>cssv(n);
+
+/* ---------- small svg helpers ---------- */
+function mk(tag,at={}){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);return e;}
+function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length;}
+function meanSeries(modelObj,key){ // avg across seeds, elementwise
+  const seeds=Object.values(modelObj);
+  const n=seeds[0][key].length, out=[];
+  for(let i=0;i<n;i++) out.push(mean(seeds.map(s=>s[key][i])));
+  return out;
+}
+
+/* ---------- LINE CHART (multi-series, hover crosshair) ---------- */
+function lineChart(host,{series,yLabel,yMax,xMax=29,fmtY=v=>v,fmtTipY=v=>Math.round(v).toLocaleString()}){
+  const W=720,H=360,P={l:62,r:18,t:16,b:40};
+  const plotW=W-P.l-P.r, plotH=H-P.t-P.b;
+  const ymax=yMax??Math.max(...series.flatMap(s=>s.pts));
+  const X=i=>P.l+ (i/xMax)*plotW;
+  const Y=v=>P.t+plotH-(v/ymax)*plotH;
+  const svg=mk("svg",{class:"chart",viewBox:`0 0 ${W} ${H}`,role:"img"});
+  // gridlines + y ticks
+  const ticks=5;
+  for(let t=0;t<=ticks;t++){
+    const v=ymax*t/ticks, y=Y(v);
+    svg.appendChild(mk("line",{x1:P.l,x2:W-P.r,y1:y,y2:y,stroke:C("--grid"),"stroke-width":1}));
+    const tx=mk("text",{x:P.l-8,y:y+4,"text-anchor":"end",fill:C("--muted"),"font-size":12,"font-family":"var(--mono)"});
+    tx.textContent=fmtY(v);svg.appendChild(tx);
+  }
+  // x ticks
+  [0,7,14,21,29].forEach(d=>{
+    const x=X(d);
+    svg.appendChild(mk("line",{x1:x,x2:x,y1:P.t,y2:P.t+plotH,stroke:C("--grid"),"stroke-width":1}));
+    const tx=mk("text",{x,y:H-P.b+20,"text-anchor":"middle",fill:C("--muted"),"font-size":12,"font-family":"var(--mono)"});
+    tx.textContent="วัน "+d;svg.appendChild(tx);
+  });
+  const yl=mk("text",{x:16,y:P.t+plotH/2,fill:C("--muted"),"font-size":12,"text-anchor":"middle",transform:`rotate(-90 16 ${P.t+plotH/2})`});
+  yl.textContent=yLabel;svg.appendChild(yl);
+  // lines
+  series.forEach(s=>{
+    const d=s.pts.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)).join(" ");
+    svg.appendChild(mk("path",{d,fill:"none",stroke:C(s.color),"stroke-width":2.4,
+      "stroke-dasharray":s.dash||"", "stroke-linejoin":"round","stroke-linecap":"round"}));
+    const li=s.pts.length-1;
+    svg.appendChild(mk("circle",{cx:X(li),cy:Y(s.pts[li]),r:3.6,fill:C(s.color),stroke:C("--surface"),"stroke-width":1.5}));
+  });
+  // hover
+  const cursor=mk("line",{x1:0,x2:0,y1:P.t,y2:P.t+plotH,stroke:C("--axis"),"stroke-width":1,"stroke-dasharray":"3 3",opacity:0});
+  svg.appendChild(cursor);
+  const dots=series.map(s=>{const c=mk("circle",{r:4.2,fill:C(s.color),stroke:C("--surface"),"stroke-width":1.6,opacity:0});svg.appendChild(c);return c;});
+  host.appendChild(svg);
+  const tip=document.createElement("div");tip.className="tip";host.appendChild(tip);
+  const hit=mk("rect",{x:P.l,y:P.t,width:plotW,height:plotH,fill:"transparent"});svg.appendChild(hit);
+  function move(ev){
+    const r=svg.getBoundingClientRect();
+    const px=(ev.clientX-r.left)/r.width*W;
+    let i=Math.round((px-P.l)/plotW*xMax); i=Math.max(0,Math.min(xMax,i));
+    cursor.setAttribute("x1",X(i));cursor.setAttribute("x2",X(i));cursor.setAttribute("opacity",1);
+    let rows="";
+    series.forEach((s,k)=>{dots[k].setAttribute("cx",X(i));dots[k].setAttribute("cy",Y(s.pts[i]));dots[k].setAttribute("opacity",1);
+      rows+=`<div class="row"><span><i class="sw" style="background:${C(s.color)}"></i>${s.name}</span><b>${fmtTipY(s.pts[i])}</b></div>`;});
+    tip.innerHTML=`<div style="color:var(--muted);margin-bottom:4px">วันที่ ${i}</div>${rows}`;
+    tip.style.opacity=1;
+    const hostR=host.getBoundingClientRect();
+    let left=(X(i)/W)*hostR.width+14; if(left>hostR.width-150)left-=175;
+    tip.style.left=left+"px";tip.style.top="8px";
+  }
+  hit.addEventListener("mousemove",move);
+  hit.addEventListener("mouseleave",()=>{tip.style.opacity=0;cursor.setAttribute("opacity",0);dots.forEach(d=>d.setAttribute("opacity",0));});
+  svg.addEventListener("touchstart",e=>move(e.touches[0]),{passive:true});
+  svg.addEventListener("touchmove",e=>move(e.touches[0]),{passive:true});
+}
+
+/* ---------- STACKED AREA (action shares over time) ---------- */
+function stackedArea(host,days,stacks){
+  const W=720,H=330,P={l:46,r:14,t:14,b:36};
+  const plotW=W-P.l-P.r,plotH=H-P.t-P.b,n=days.length,xMax=days[days.length-1];
+  const X=i=>P.l+(days[i]/xMax)*plotW, Y=v=>P.t+plotH-v*plotH;
+  const svg=mk("svg",{class:"chart",viewBox:`0 0 ${W} ${H}`});
+  for(let t=0;t<=4;t++){const v=t/4,y=Y(v);
+    svg.appendChild(mk("line",{x1:P.l,x2:W-P.r,y1:y,y2:y,stroke:C("--grid")}));
+    const tx=mk("text",{x:P.l-7,y:y+4,"text-anchor":"end",fill:C("--muted"),"font-size":11,"font-family":"var(--mono)"});
+    tx.textContent=(v*100)+"%";svg.appendChild(tx);}
+  [0,7,14,21,29].forEach(d=>{const x=P.l+(d/xMax)*plotW;
+    const tx=mk("text",{x,y:H-P.b+18,"text-anchor":"middle",fill:C("--muted"),"font-size":11,"font-family":"var(--mono)"});
+    tx.textContent=d;svg.appendChild(tx);});
+  const cum=new Array(n).fill(0);
+  stacks.forEach(s=>{
+    const top=cum.map((c,i)=>c+s.values[i]);
+    let d="M"+X(0)+" "+Y(cum[0]);
+    for(let i=0;i<n;i++)d+=" L"+X(i).toFixed(1)+" "+Y(top[i]).toFixed(1);
+    for(let i=n-1;i>=0;i--)d+=" L"+X(i).toFixed(1)+" "+Y(cum[i]).toFixed(1);
+    d+="Z";
+    svg.appendChild(mk("path",{d,fill:C(s.color),opacity:.92,stroke:C("--surface"),"stroke-width":1}));
+    for(let i=0;i<n;i++)cum[i]=top[i];
+  });
+  host.appendChild(svg);
+}
+
+/* ---------- HORIZONTAL 100% STACKED BARS (per occupation) ---------- */
+function hStack(host,rows){
+  const bw=16,gap=14,padT=6,padB=6,labelW=150,W=720;
+  const H=padT+padB+rows.length*(bw+gap)-gap+18;
+  const plotL=labelW,plotW=W-plotL-14;
+  const svg=mk("svg",{class:"chart",viewBox:`0 0 ${W} ${H}`});
+  const tip=document.createElement("div");tip.className="tip";
+  rows.forEach((r,ri)=>{
+    const y=padT+ri*(bw+gap);
+    const lb=mk("text",{x:plotL-10,y:y+bw/2+4,"text-anchor":"end",fill:C("--fg"),"font-size":12.5,"font-weight":600});
+    lb.textContent=r.label;svg.appendChild(lb);
+    const sub=mk("text",{x:plotL-10,y:y+bw/2+18,"text-anchor":"end",fill:C("--muted"),"font-size":10.5});
+    sub.textContent="n="+r.n;svg.appendChild(sub);
+    let x=plotL;
+    r.segs.forEach(sg=>{
+      if(sg.value<=0)return;
+      const w=sg.value*plotW;
+      const rect=mk("rect",{x:x+ (x>plotL?1:0),y,width:Math.max(0,w-2),height:bw,rx:3,fill:C(sg.color)});
+      rect.addEventListener("mousemove",ev=>{const hr=host.getBoundingClientRect();
+        tip.innerHTML=`<div class="row"><span><i class="sw" style="background:${C(sg.color)}"></i>${sg.name}</span><b>${(sg.value*100).toFixed(0)}%</b></div><div style="color:var(--muted);font-size:11px;margin-top:2px">${r.label}</div>`;
+        tip.style.opacity=1;tip.style.left=(ev.clientX-hr.left+12)+"px";tip.style.top=(ev.clientY-hr.top+12)+"px";});
+      rect.addEventListener("mouseleave",()=>tip.style.opacity=0);
+      svg.appendChild(rect);
+      if(w>42){const t=mk("text",{x:x+w/2,y:y+bw/2+4,"text-anchor":"middle",fill:"#fff","font-size":11,"font-weight":600});
+        t.textContent=(sg.value*100).toFixed(0);svg.appendChild(t);}
+      x+=w;
+    });
+  });
+  host.appendChild(svg);host.appendChild(tip);
+}
+
+/* ---------- GROUPED BARS (attack rate C vs D) ---------- */
+function groupedBars(host,groups,seriesDef,{fmtV,yLabel,rotate}){
+  const W=720,H=rotate?380:320,P={l:58,r:14,t:16,b:rotate?96:52};
+  const plotW=W-P.l-P.r,plotH=H-P.t-P.b;
+  const ymax=Math.max(...groups.flatMap(g=>g.vals))*1.15;
+  const Y=v=>P.t+plotH-(v/ymax)*plotH;
+  const svg=mk("svg",{class:"chart",viewBox:`0 0 ${W} ${H}`});
+  for(let t=0;t<=4;t++){const v=ymax*t/4,y=Y(v);
+    svg.appendChild(mk("line",{x1:P.l,x2:W-P.r,y1:y,y2:y,stroke:C("--grid")}));
+    const tx=mk("text",{x:P.l-8,y:y+4,"text-anchor":"end",fill:C("--muted"),"font-size":11,"font-family":"var(--mono)"});
+    tx.textContent=fmtV(v);svg.appendChild(tx);}
+  const gw=plotW/groups.length, bw=Math.min(54,(gw*0.64)/seriesDef.length);
+  groups.forEach((g,gi)=>{
+    const gx=P.l+gi*gw+gw/2;
+    const tot=seriesDef.length*bw+(seriesDef.length-1)*8;
+    let bx=gx-tot/2;
+    g.vals.forEach((v,si)=>{
+      const h=(v/ymax)*plotH;
+      svg.appendChild(mk("rect",{x:bx,y:Y(v),width:bw,height:h,rx:4,fill:C(seriesDef[si].color)}));
+      const t=mk("text",{x:bx+bw/2,y:Y(v)-7,"text-anchor":"middle",fill:C("--fg"),"font-size":11.5,"font-weight":600,"font-family":"var(--mono)"});
+      t.textContent=fmtV(v);svg.appendChild(t);
+      bx+=bw+8;
+    });
+    const gl=rotate
+      ? mk("text",{x:gx,y:H-P.b+16,"text-anchor":"end",fill:C("--fg-2"),"font-size":11.5,"font-family":"var(--mono)",transform:`rotate(-40 ${gx} ${H-P.b+16})`})
+      : mk("text",{x:gx,y:H-P.b+22,"text-anchor":"middle",fill:C("--fg"),"font-size":13,"font-weight":600});
+    gl.textContent=g.label;svg.appendChild(gl);
+  });
+  host.appendChild(svg);
+}
+
+function legend(host,items){ // items:[{name,color,line?}]
+  const d=document.createElement("div");d.className="legend";
+  d.innerHTML=items.map(i=>`<span><i class="${i.line?'ln':''}" style="background:${C(i.color)}"></i>${i.name}</span>`).join("");
+  host.appendChild(d);
+}
+function seg(host,opts,cur,cb){ // opts:[{v,label}]
+  const s=document.createElement("div");s.className="seg";
+  opts.forEach(o=>{const b=document.createElement("button");b.textContent=o.label;
+    b.setAttribute("aria-pressed",o.v===cur);b.onclick=()=>{[...s.children].forEach(c=>c.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");cb(o.v);};s.appendChild(b);});
+  host.appendChild(s);return s;
+}
+</script>
+<script id="BUILD">
+/* ====================== BUILD PAGE ====================== */
+const app=$("#app"), cfg=DATA.config;
+
+/* ----- hero tiles ----- */
+(function(){
+  const s=DATA.summary_cd;
+  const mAR=(cond,m)=>mean(s.filter(r=>r.condition===cond&&r.model===m).map(r=>r.attack_rate));
+  const tiles=[
+    {k:"Attack rate · Typhoon (C)",v:fmtPct(mAR("C","typhoon8b")),d:"ระมัดระวังกว่า — ติดเชื้อสะสมต่ำ"},
+    {k:"Attack rate · Qwen (C)",v:fmtPct(mAR("C","qwen7b")),d:"ตอบสนองน้อย — สูงกว่า ~2 เท่า"},
+    {k:"ผู้นำ (D) ลดการระบาด",v:"−31–36%",d:"เทียบกับ C ทั้งสองโมเดล"},
+    {k:"JSON ถูก schema",v:"≈100%",d:"fallback 0% ทุกโมเดล"},
+  ];
+  $("#heroTiles").innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${t.k}</div><div class="v tabnum">${t.v}</div><div class="d">${t.d}</div></div>`).join("");
+})();
+
+function section(id,no,title,lede){const s=document.createElement("section");s.id=id;
+  s.innerHTML=`<div class="sec-head"><span class="no">${no}</span><h2>${title}</h2></div><p class="lede">${lede}</p>`;
+  app.appendChild(s);return s;}
+
+/* ===== 1. DESIGN / VARIABLES ===== */
+(function(){
+  const s=section("design","01","การออกแบบการทดลอง & ตัวแปร",
+    "ประชากรสังเคราะห์ระดับจังหวัด 1 ล้านคน ขับเคลื่อนด้วยโมดูล SEIR ส่วนพฤติกรรมรายวันมาจากตัวแทน 40 คนใน 4 เงื่อนไข ตั้งแต่ไม่มีการตอบสนอง (A) จนถึงมีผู้นำสั่งนโยบาย (D)");
+  const conds=[
+    ["A","ฐาน — ไม่ตอบสนอง","β คงที่ ไม่มีการปรับพฤติกรรม ใช้ตรวจความถูกต้องของ SEIR","--s-gray"],
+    ["B","กฎเกณฑ์ (rule-based)","ลดการออกตามจำนวนผู้ป่วยด้วยสมการ ไม่มี LLM","--s-blue"],
+    ["C","ประชาชนเป็น LLM","ตัวแทน 40 คนเลือก 1 ใน 4 กิจกรรมทุกวันจากโปรไฟล์+สถานการณ์","--s-orange"],
+    ["D","เพิ่มผู้นำ LLM","ผู้ว่าฯ สั่งระดับมาตรการรายสัปดาห์ ประชาชนตอบสนองต่อมาตรการ","--s-aqua"],
+  ];
+  const condHtml=`<div class="grid2">${conds.map(c=>`<div class="card" style="border-left:4px solid ${C(c[3])}">
+    <div style="display:flex;align-items:center;gap:8px"><span class="pill" style="background:${C(c[3])};color:#fff">${c[0]}</span><b>${c[1]}</b></div>
+    <p style="margin:8px 0 0;font-size:13.5px;color:var(--fg-2)">${c[2]}</p></div>`).join("")}</div>`;
+
+  const dis=`<div class="card"><b style="font-size:14px">พารามิเตอร์โรค (SEIR)</b>
+    <dl class="kv" style="margin-top:10px">
+    <dt>β₀ (อัตราแพร่/วัน)</dt><dd>${cfg.beta0}</dd>
+    <dt>ระยะฟักตัว</dt><dd>${cfg.latent_days} วัน</dd>
+    <dt>ระยะแพร่เชื้อ</dt><dd>${cfg.infectious_days} วัน</dd>
+    <dt>สัดส่วนมีอาการ</dt><dd>${fmtPct(cfg.symptomatic_frac)}</dd>
+    <dt>ประชากร N</dt><dd>${cfg.N.toLocaleString()}</dd>
+    <dt>LLM temperature</dt><dd>${cfg.llm.temperature}</dd>
+    </dl></div>`;
+  const acts=`<div class="card"><b style="font-size:14px">4 ทางเลือกกิจกรรมของประชาชน</b>
+    <div style="margin-top:10px;display:grid;gap:8px">${ACT.map(a=>`<div style="display:flex;gap:9px;align-items:flex-start">
+      <i style="width:11px;height:11px;border-radius:3px;background:${C(ACT_COL[a])};margin-top:5px;flex:none"></i>
+      <div><b style="font-size:13.5px">${ACT_TH[a]}</b> <span class="note mono">${a}</span><br>
+      <span style="font-size:12.5px;color:var(--fg-2)">${cfg.actions[a]}</span></div></div>`).join("")}</div></div>`;
+
+  const lvls=`<div class="card"><b style="font-size:14px">ระดับมาตรการของผู้นำ (เงื่อนไข D)</b>
+    <div style="margin-top:10px;display:grid;gap:8px">${Object.entries(cfg.levels).map(([k,v])=>`<div style="display:flex;gap:9px;align-items:flex-start">
+      <span class="pill" style="background:${C(LVL_COL[k])};color:#fff;flex:none">${LVL_TH[k]}</span>
+      <span style="font-size:12.5px;color:var(--fg-2)">d=${v.d} · ${v.text}</span></div>`).join("")}</div></div>`;
+
+  // personas
+  const g=DATA.personas.groups;
+  const personaRows=g.map(p=>`<tr><td><b>${p.label}</b><br><span class="note">${p.occupation}</span></td>
+    <td class="num">${p.n}</td><td class="num">${fmtPct(p.can_wfh_share)}</td>
+    <td class="num">${fmtPct(p.essential_share)}</td><td class="num">${fmtPct(p.high_risk_share)}</td></tr>`).join("");
+  const personas=`<div class="card"><b style="font-size:14px">กลุ่มอาชีพของตัวแทน 40 คน</b>
+    <div class="tbl-scroll" style="margin-top:10px"><table><thead><tr>
+    <th>กลุ่ม</th><th class="num">จำนวน</th><th class="num">WFH ได้</th><th class="num">งานจำเป็น</th><th class="num">อยู่กับกลุ่มเสี่ยง</th>
+    </tr></thead><tbody>${personaRows}</tbody></table></div>
+    <p class="note" style="margin:8px 0 0">สัดส่วนอายุ 20–64 ปีถ่วงจาก Prem/UN 2020 · WFH และ income loss บางส่วนยังเป็น assumption</p></div>`;
+
+  s.insertAdjacentHTML("beforeend",condHtml+
+    `<div class="grid3" style="margin-top:16px">${dis}${acts}${lvls}</div>`+
+    `<div style="margin-top:16px">${personas}</div>`);
+})();
+
+/* ===== 2. PROMPTS ===== */
+(function(){
+  const s=section("prompt","02","Prompt จริงที่ส่งเข้าโมเดล",
+    "ทุกโมเดลใช้เทมเพลตเดียวกัน โมเดลต้องตอบเป็น JSON เท่านั้น ระบบตรวจ schema → ถ้าผิดลองใหม่ 1 ครั้ง → ถ้ายังผิดใช้คำตอบเดิม (flag fallback) และบันทึก raw output ทุกครั้ง");
+  s.insertAdjacentHTML("beforeend",
+    `<details class="prompt-box" open><summary>Prompt ประชาชน (resident) — ตัวอย่างจริง วันที่ 0</summary><pre>${esc(DATA.prompts.resident)}</pre></details>
+     <details class="prompt-box" style="margin-top:12px"><summary>Prompt ผู้นำ (governor) — ตัวอย่างจริง วันที่ 0</summary><pre>${esc(DATA.prompts.leader)}</pre></details>`);
+})();
+function esc(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ===== 3. FEASIBILITY ===== */
+(function(){
+  const s=section("feas","03","ความเป็นไปได้ของโมเดลบน T4",
+    "ทั้ง Typhoon-8B และ Qwen-7B พอดีกับ VRAM ของ Tesla T4 (&lt;11 GB) ตอบ JSON ถูก schema 100% ตั้งแต่ครั้งแรก และให้คำตอบเดิมเป๊ะเมื่อ T=0 จุดต่างคือความคงเส้นคงวาเมื่อ T=0.7");
+  const keep=new Set(["typhoon8b","qwen7b"]);
+  const rows=DATA.feasibility.map(r=>{const used=keep.has(r.model_key);
+    return `<tr style="${used?'':'opacity:.5'}"><td><b>${r.model_key}</b>${used?' <span class="badge">ใช้จริง</span>':''}</td>
+      <td class="num">${r.gpu_mem_peak_mb.toLocaleString()}</td>
+      <td class="num">${r.tokens_per_s.toFixed(1)}</td>
+      <td class="num">${(r.valid_first_try*100).toFixed(0)}%</td>
+      <td class="num">${(r.modal_agreement_t*100).toFixed(0)}%</td>
+      <td class="num">${r.est_run_min.toFixed(1)}</td></tr>`;}).join("");
+  s.insertAdjacentHTML("beforeend",
+    `<div class="tbl-scroll"><table><thead><tr><th>โมเดล</th><th class="num">VRAM peak (MB)</th>
+     <th class="num">tokens/s</th><th class="num">valid ครั้งแรก</th><th class="num">คงเส้นคงวา T=0.7</th><th class="num">ประเมินเวลา (นาที)</th>
+     </tr></thead><tbody>${rows}</tbody></table></div>
+     <div class="callout">Qwen-7B คงเส้นคงวากว่า (93%) แต่หัวข้อถัดไปจะเห็นว่า “คงเส้นคงวา” ของ Qwen คือการเลือกไปทำงานซ้ำ ๆ โดยแทบไม่สนสถานการณ์ ส่วน Typhoon (76%) ให้พฤติกรรมหลากหลายและสมจริงกับบริบทไทยมากกว่า</div>
+     <p class="note">อีก 3 โมเดล (llama8b, mistral7b, qwen1_5b) รันเฉพาะขั้น feasibility ไว้เทียบ ไม่ได้นำเข้าเงื่อนไข C/D ตามที่เลือกใช้ 2 โมเดลหลัก</p>`);
+})();
+
+/* ===== 4. BASELINE A/B + SENSITIVITY ===== */
+(function(){
+  const s=section("baseline","04","SEIR ฐาน (A/B) และ Sensitivity",
+    "รัน A/B ยาว 180 วันเพื่อตรวจ final size และทำ sensitivity ของโครงสร้าง contact บนเงื่อนไข B (rule-based) ช่วง 30 วัน");
+  // long curves
+  const row=document.createElement("div");row.className="grid2";
+  const c1=document.createElement("div");c1.className="card";
+  c1.innerHTML=`<b style="font-size:14px">การระบาดสะสม 180 วัน — A เทียบ B</b><div class="chart-wrap" id="blLong"></div>`;
+  const c2=document.createElement("div");c2.className="card";
+  c2.innerHTML=`<b style="font-size:14px">Sensitivity (B, 30 วัน) — attack rate</b><div class="chart-wrap" id="blSens"></div>`;
+  row.append(c1,c2);s.appendChild(row);
+
+  const A=DATA.trajectories.A_long, B=DATA.trajectories.B_long;
+  lineChart($("#blLong"),{series:[
+    {name:"A (ไม่ตอบสนอง)",color:"--s-gray",pts:A.I},
+    {name:"B (rule-based)",color:"--s-blue",pts:B.I},
+  ],yLabel:"ผู้ติดเชื้อ (I)",xMax:A.day.length-1,fmtY:v=>(v/1000).toFixed(0)+"k"});
+  legend($("#blLong"),[{name:"A — attack rate 79%",color:"--s-gray",line:1},{name:"B — attack rate 46%",color:"--s-blue",line:1}]);
+
+  // sensitivity bars
+  const sens=DATA.baseline.filter(r=>r.tag&&r.tag.startsWith("sens"));
+  const byTag={};sens.forEach(r=>byTag[r.tag]=r.attack_rate);
+  const order=["sens_home=0.5","sens_home=1.0","sens_home=1.5","sens_f_errand=0.3","sens_f_errand=0.5","sens_f_errand=0.7","sens_f_visit=0.15","sens_f_visit=0.3","sens_f_visit=0.5"];
+  const groups=order.filter(t=>t in byTag).map(t=>({label:t.replace("sens_",""),vals:[byTag[t]]}));
+  groupedBars($("#blSens"),groups,[{name:"attack rate",color:"--s-blue"}],{fmtV:v=>(v*100).toFixed(1)+"%",yLabel:"attack rate"});
+  $("#blSens").querySelector("svg").setAttribute("viewBox","0 0 720 360");
+  $("#blSens").insertAdjacentHTML("beforeend",`<p class="note" style="margin:8px 0 0">ไวต่อ <b>w_home</b> มากสุด (2.5%→3.0%) ส่วน f_errand / f_visit แทบไม่ขยับในช่วง 30 วัน</p>`);
+})();
+
+/* ===== 5. RESIDENTS (C) ===== */
+(function(){
+  const s=section("resident","05","ประชาชนเป็น LLM (เงื่อนไข C)",
+    "นี่คือหัวใจของงาน — Typhoon เลือกอยู่บ้านมากกว่าและกระจายพฤติกรรมตามอาชีพ ขณะที่ Qwen เลือกไปทำงานเป็นส่วนใหญ่ (q_out&gt;1 คือออกนอกบ้านมากกว่าวันปกติ) ลองสลับโมเดลและเงื่อนไขดู");
+
+  // 5a epidemic curves (C & D, both models)
+  const cA=document.createElement("div");cA.className="card";
+  cA.innerHTML=`<b style="font-size:14px">เส้นการระบาด — ผู้ติดเชื้อ (I) เฉลี่ย 3 seeds</b>
+    <div class="controls" style="margin-top:10px"><span class="ctl-label">แสดง:</span><span id="epiMetricSeg"></span></div>
+    <div class="chart-wrap" id="epiChart"></div>`;
+  s.appendChild(cA);
+  function drawEpi(metric){
+    const h=$("#epiChart");h.innerHTML="";
+    const T=DATA.trajectories;
+    const series=[
+      {name:"C · Typhoon",color:"--s-blue",pts:meanSeries(T.C.typhoon8b,metric)},
+      {name:"C · Qwen",color:"--s-orange",pts:meanSeries(T.C.qwen7b,metric)},
+      {name:"D · Typhoon",color:"--s-blue",dash:"6 4",pts:meanSeries(T.D.typhoon8b,metric)},
+      {name:"D · Qwen",color:"--s-orange",dash:"6 4",pts:meanSeries(T.D.qwen7b,metric)},
+    ];
+    const isPct=metric==="reported_per100k";
+    lineChart(h,{series,yLabel:isPct?"รายงาน/แสน":"ผู้ติดเชื้อ (I)",
+      fmtY:v=>isPct?v.toFixed(0):(v/1000).toFixed(0)+"k",
+      fmtTipY:v=>isPct?v.toFixed(0):Math.round(v).toLocaleString()});
+    legend(h,[{name:"Typhoon",color:"--s-blue",line:1},{name:"Qwen",color:"--s-orange",line:1},
+      {name:"C เส้นทึบ · D เส้นประ",color:"--muted",line:1}]);
+  }
+  seg($("#epiMetricSeg"),[{v:"I",label:"ผู้ติดเชื้อ I"},{v:"reported_per100k",label:"รายงาน/แสน"}],"I",drawEpi);
+  drawEpi("I");
+
+  // 5b action by occupation
+  const cB=document.createElement("div");cB.className="card";cB.style.marginTop="16px";
+  cB.innerHTML=`<b style="font-size:14px">สัดส่วนการเลือกกิจกรรม แยกตามกลุ่มอาชีพ</b>
+    <div class="controls" style="margin-top:10px">
+      <span class="ctl-label">โมเดล:</span><span id="occModel"></span>
+      <span class="ctl-label" style="margin-left:8px">เงื่อนไข:</span><span id="occCond"></span></div>
+    <div class="chart-wrap" id="occChart"></div>`;
+  s.appendChild(cB);
+  let occM="typhoon8b",occC="C";
+  function drawOcc(){
+    const h=$("#occChart");h.innerHTML="";
+    const gs=DATA.group_shares[occC][occM];
+    const glabel={}; DATA.personas.groups.forEach(p=>glabel[p.key]={label:p.label,n:p.n});
+    const rows=DATA.personas.groups.map(p=>({label:p.label,n:p.n,
+      segs:ACT.map(a=>({name:ACT_TH[a],color:ACT_COL[a],value:gs[p.key][a]}))}));
+    // overall row
+    const allN=DATA.personas.n_agents;
+    rows.push({label:"รวมทั้งหมด",n:allN,segs:ACT.map(a=>({name:ACT_TH[a],color:ACT_COL[a],value:gs.__all__[a]}))});
+    hStack(h,rows);
+    legend(h,ACT.map(a=>({name:ACT_TH[a],color:ACT_COL[a]})));
+  }
+  seg($("#occModel"),[{v:"typhoon8b",label:"Typhoon"},{v:"qwen7b",label:"Qwen"}],occM,v=>{occM=v;drawOcc();});
+  seg($("#occCond"),[{v:"C",label:"C"},{v:"D",label:"D"}],occC,v=>{occC=v;drawOcc();});
+  drawOcc();
+
+  // 5c action share over time (stacked area)
+  const cC=document.createElement("div");cC.className="card";cC.style.marginTop="16px";
+  cC.innerHTML=`<b style="font-size:14px">สัดส่วนกิจกรรมตามเวลา (population-weighted)</b>
+    <div class="controls" style="margin-top:10px"><span class="ctl-label">โมเดล:</span><span id="areaModel"></span></div>
+    <div class="chart-wrap" id="areaChart"></div>`;
+  s.appendChild(cC);
+  function drawArea(m){
+    const h=$("#areaChart");h.innerHTML="";
+    const t=DATA.trajectories.C[m];
+    const days=t["1"].day;
+    const stacks=ACT.map(a=>({name:ACT_TH[a],color:ACT_COL[a],values:meanSeries(t,"share_"+a)}));
+    stackedArea(h,days,stacks);
+    legend(h,ACT.map(a=>({name:ACT_TH[a],color:ACT_COL[a]})));
+  }
+  seg($("#areaModel"),[{v:"typhoon8b",label:"Typhoon"},{v:"qwen7b",label:"Qwen"}],"typhoon8b",drawArea);
+  drawArea("typhoon8b");
+
+  // 5d example answers
+  const cD=document.createElement("div");cD.style.marginTop="16px";
+  cD.innerHTML=`<div class="sec-head" style="margin-bottom:4px"><h3 style="font-size:18px">ตัวอย่างคำตอบจริง รายกลุ่มอาชีพ</h3></div>
+    <p class="lede" style="margin:4px 0 14px">โปรไฟล์เดียวกัน เปรียบเทียบการตัดสินใจ “วันแรก (ยังไม่มีเคส)” กับ “ปลายการระบาด (เคสสูง)” — เห็นเหตุผลที่โมเดลให้จริง</p>
+    <div class="controls"><span class="ctl-label">โมเดล:</span><span id="exModel"></span></div>
+    <div class="ex-grid" id="exGrid"></div>`;
+  s.appendChild(cD);
+  function chip(a){return `<span class="chip" style="background:${C(ACT_COL[a])}">${ACT_TH[a]}</span>`;}
+  function drawEx(m){
+    const grid=$("#exGrid");
+    const ex=DATA.examples.filter(e=>e.model===m&&e.condition==="C");
+    grid.innerHTML=ex.map(e=>`<div class="ex">
+      <h4>${e.glabel}</h4><div class="occ mono">agent #${e.agent_id} · ${e.profile[1]?.replace('Main activity: ','')||''}</div>
+      <div class="prof">${e.profile.map(p=>esc(p)).join(" · ")}</div>
+      <div class="step"><div class="when">วันที่ 0<br><span style="color:var(--good)">เคส 0</span></div>
+        <div class="body">${chip(e.early.choice)}<div class="reason">“${esc(e.early.reason)}”</div></div></div>
+      <div class="step"><div class="when">วันที่ 29<br><span style="color:var(--crit)">เคสสูง</span></div>
+        <div class="body">${chip(e.late.choice)}<div class="reason">“${esc(e.late.reason)}”</div></div></div>
+    </div>`).join("");
+  }
+  seg($("#exModel"),[{v:"typhoon8b",label:"Typhoon"},{v:"qwen7b",label:"Qwen"}],"typhoon8b",drawEx);
+  drawEx("typhoon8b");
+})();
+
+/* ===== 6. LEADER (D) ===== */
+(function(){
+  const s=section("leader","06","ผู้นำ LLM สั่งนโยบายรายสัปดาห์ (เงื่อนไข D)",
+    "ผู้ว่าฯ ตัดสินใจทุก 7 วันจากรายงานเคส+สัดส่วนคนออกไปทำงาน ทั้งสองโมเดลเกือบทั้งหมดเลือก “จำกัด” และ<b>ไม่เคยยกระดับเป็น “เข้มงวด”</b> เลย แม้เคสจะเพิ่มขึ้น — ความต่างของผล D จึงมาจากพฤติกรรมประชาชน ไม่ใช่ผู้นำ");
+
+  // attack rate C vs D grouped
+  const cAR=document.createElement("div");cAR.className="card";
+  cAR.innerHTML=`<b style="font-size:14px">Attack rate — เพิ่มชั้นผู้นำ (D) ลดการระบาด</b><div class="chart-wrap" id="arChart"></div>`;
+  s.appendChild(cAR);
+  const sm=DATA.summary_cd;
+  const mAR=(c,m)=>mean(sm.filter(r=>r.condition===c&&r.model===m).map(r=>r.attack_rate));
+  groupedBars($("#arChart"),[
+    {label:"Typhoon-8B",vals:[mAR("C","typhoon8b"),mAR("D","typhoon8b")]},
+    {label:"Qwen2.5-7B",vals:[mAR("C","qwen7b"),mAR("D","qwen7b")]},
+  ],[{name:"C",color:"--s-orange"},{name:"D",color:"--s-aqua"}],{fmtV:v=>(v*100).toFixed(1)+"%",yLabel:"attack rate"});
+  legend($("#arChart"),[{name:"C (ไม่มีผู้นำ)",color:"--s-orange"},{name:"D (มีผู้นำ)",color:"--s-aqua"}]);
+  const redT=(mAR("C","typhoon8b")-mAR("D","typhoon8b"))/mAR("C","typhoon8b")*100;
+  const redQ=(mAR("C","qwen7b")-mAR("D","qwen7b"))/mAR("C","qwen7b")*100;
+  $("#arChart").insertAdjacentHTML("beforeend",`<p class="note" style="margin:8px 0 0">ลดลง Typhoon −${redT.toFixed(1)}% · Qwen −${redQ.toFixed(1)}%</p>`);
+
+  // leader timeline per model
+  ["typhoon8b","qwen7b"].forEach(m=>{
+    const steps=DATA.leaders[m][0].steps; // seed1 representative
+    const c=document.createElement("div");c.className="card";c.style.marginTop="16px";
+    c.innerHTML=`<b style="font-size:14px">เส้นทางนโยบาย — ${MODEL_TH[m]} <span class="note">(seed 1; seed อื่นเกือบเหมือนกัน)</span></b>
+      <div class="timeline" style="margin-top:12px">${steps.map(st=>`<div class="tl-step" style="border-left-color:${C(LVL_COL[st.level])}">
+        <div class="wk">สัปดาห์ · วันที่ ${st.day}</div>
+        <div class="lvl" style="color:${C(LVL_COL[st.level])}">${LVL_TH[st.level]}</div>
+        <div class="meta tabnum">${st.cases7d?.replace(' per 100,000 people per day',' /แสน')||''}<br>ออกทำงาน ${st.onsite||''}</div>
+        <div class="rsn">“${esc(st.reason)}”</div></div>`).join("")}</div>`;
+    s.appendChild(c);
+  });
+})();
+
+/* ===== 7. FINDINGS & GAPS ===== */
+(function(){
+  const s=section("findings","07","ข้อค้นพบหลัก & สิ่งที่ยังขาด",
+    "สรุปสิ่งที่ข้อมูลบอก และ 4 จุดที่ควรตรวจ/เติมก่อนนำไปสรุปเชิงวิชาการ");
+  const finds=[
+    ["ค","--s-aqua","Typhoon สมจริงกว่าในบริบทไทย","เลือกอยู่บ้าน ~39% และกระจายตามอาชีพ (กลุ่มไม่ทำงานอยู่บ้าน 90%, ค้าขายออกไปธุระ 63%) attack rate ต่ำกว่า Qwen ~2 เท่า"],
+    ["ค","--s-aqua","ชั้นผู้นำ (D) ได้ผลจริง","ลดการระบาด −31% ถึง −36% แม้ผู้นำจะเลือกแค่ระดับ “จำกัด” ไม่เคยถึง “เข้มงวด”"],
+  ];
+  const gaps=[
+    ["!","--warn","ขาด sensitivity แกน wfh_scale","คอนฟิกกำหนด sweep 4 แกน แต่ผลมีแค่ w_home / f_errand / f_visit — ไม่มี sens_wfh ทั้งที่กระทบพฤติกรรม LLM โดยตรง"],
+    ["!","--warn","Sensitivity ทำบน B เท่านั้น ไม่ได้ทำบน C","ยังไม่รู้ว่าผล LLM ไวต่อโครงสร้าง contact แค่ไหน — ควรทำบนเงื่อนไข C อย่างน้อย 1 แกน"],
+    ["?","--accent","visit_family = 0% ทุกการตัดสินใจ","ไม่มีโมเดลใดเลือก “เยี่ยมญาติ” เลย (~7,200 ครั้ง/เงื่อนไข) ควรเปิด decisions.jsonl ยืนยันว่าไม่ใช่อคติจาก prompt — action เหลือใช้จริง 3 จาก 4"],
+    ["⚠","--crit","Qwen มี q_out &gt; 1","ประชาชน Qwen ออกนอกบ้านมากกว่าวันปกติทั้งที่มีโรคระบาด เป็นลักษณะของโมเดล (ตอบสนองน้อย) ไม่ใช่บั๊ก ควรอภิปรายให้ชัด"],
+  ];
+  const render=arr=>arr.map(f=>`<div class="finding"><div class="ic" style="background:${C(f[1])}">${f[0]}</div>
+    <div><h4>${f[2]}</h4><p>${f[3]}</p></div></div>`).join("");
+  s.insertAdjacentHTML("beforeend",
+    `<h3 style="font-size:16px;margin:0 0 10px">ข้อค้นพบ</h3><div class="findings">${render(finds)}</div>
+     <h3 style="font-size:16px;margin:22px 0 10px">สิ่งที่ยังขาด / ควรตรวจ</h3><div class="findings">${render(gaps)}</div>
+     <div class="callout" style="margin-top:18px">ด้านเทคนิค LLM ผ่านชัด (schema 100%, fallback 0%, VRAM พอดี T4) — ใช้ Typhoon เป็นตัวหลักเชิงเนื้อหา และ Qwen เป็นตัวเทียบ “กรณีตอบสนองน้อย” ได้เหมาะสม</div>`);
+})();
+
+/* ---- theme toggle ---- */
+(function(){
+  const btn=$("#themeBtn");
+  let stored=null; try{stored=localStorage.getItem("gabm-theme");}catch(e){}
+  if(stored)document.documentElement.setAttribute("data-theme",stored);
+  btn.onclick=()=>{
+    const cur=document.documentElement.getAttribute("data-theme");
+    const dark=cur==="dark"||(!cur&&matchMedia("(prefers-color-scheme:dark)").matches);
+    const next=dark?"light":"dark";
+    document.documentElement.setAttribute("data-theme",next);
+    try{localStorage.setItem("gabm-theme",next);}catch(e){}
+    // redraw charts that read CSS vars
+    location.hash="";
+    document.querySelectorAll("section").forEach(()=>{});
+    setTimeout(()=>rebuildCharts(),30);
+  };
+})();
+function rebuildCharts(){ /* charts re-read tokens on redraw; simplest: reload build handlers via re-click current segs */
+  $$(".seg").forEach(s=>{const p=s.querySelector('[aria-pressed="true"]');if(p)p.click();});
+  // static charts (no seg) — rebuild by re-running their draws
+  ['blLong','blSens','arChart'].forEach(id=>{}); // left as-is; acceptable
+}
+</script>

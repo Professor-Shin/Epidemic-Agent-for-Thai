@@ -1,0 +1,38 @@
+{
+  "contact_matrices": {
+    "name": "Prem et al. 2021 synthetic contact matrices (Thailand, THA)",
+    "source": "https://github.com/kieshaprem/synthetic-contact-matrices (output/syntheticmatrices)",
+    "citation": "Prem K, et al. Projecting contact matrices in 177 geographical regions. PLoS Comput Biol 2021;17(7):e1009098",
+    "files": [
+      "contact_home.rdata",
+      "contact_work.rdata",
+      "contact_school.rdata",
+      "contact_others.rdata"
+    ]
+  },
+  "population": {
+    "name": "UN World Population Prospects 2020 by 5-year age (copy in Prem repo)",
+    "source": "https://raw.githubusercontent.com/kieshaprem/synthetic-contact-matrices/master/generate_synthetic_matrices/input/pop/popage_total2020.csv"
+  },
+  "mobility": {
+    "name": "Google COVID-19 Community Mobility Reports, Thailand national",
+    "source": "https://www.gstatic.com/covid19/mobility/Region_Mobility_Report_CSVs.zip",
+    "note": "Archived dataset (reports ended Oct 2022). Used only for plausible ranges."
+  },
+  "policy_cases": {
+    "name": "Oxford COVID-19 Government Response Tracker, national compact v1, THA",
+    "source": "https://raw.githubusercontent.com/OxCGRT/covid-policy-dataset/main/data/OxCGRT_compact_national_v1.csv",
+    "citation": "Hale T, et al. Nat Hum Behav 2021;5:529-538",
+    "note": "Stringency for policy bounds; ConfirmedCases for context only."
+  },
+  "persona_marginals": {
+    "name": "Occupation shares, WFH ability, household attributes",
+    "source": "manual",
+    "note": "config/persona_marginals.csv; status column says data or assumption. Fill from NSO Labour Force Survey / Census 2020."
+  },
+  "disease": {
+    "name": "SEIR parameters",
+    "source": "Aoki & Ghaffarzadegan (2026); see 04_อธิบายตัวแปรและค่าสถิติ.md"
+  },
+  "prepared": "2026-10-11"
+}
