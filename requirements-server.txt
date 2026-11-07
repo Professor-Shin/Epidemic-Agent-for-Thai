@@ -1,0 +1,15 @@
+# GPU server (SLURM) environment, installed by scripts/server/setup_env.sh (torch is installed there first).
+# Versions match what the Colab runs recorded in outputs/runs/*/runtime.json (python 3.13, torch 2.11.0,
+# transformers 5.20.1, bitsandbytes 0.50.2), so server and Colab results come from the same model code
+# and the same 4-bit kernels. Colab preinstalls numpy/pandas/scipy/matplotlib; here they are listed explicitly.
+numpy==2.1.3
+pandas==2.2.3
+scipy==1.16.3
+matplotlib
+pyyaml>=6.0
+transformers==5.20.1
+bitsandbytes==0.50.2
+accelerate>=0.33
+huggingface_hub
+papermill
+ipykernel

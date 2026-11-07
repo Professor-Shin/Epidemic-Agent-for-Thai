@@ -17,7 +17,7 @@ disease:                     # Aoki & Ghaffarzadegan (2026), see 04_อธิบ
   symptomatic_frac: 0.7      # share of infectious agents who notice symptoms (assumption)
 
 sim:
-  days: 30                   # pilot length (guideline section 11, phase 4)
+  days: 30                   # pilot length (guideline section 11, phase 4); notebooks 04/05 override to 180 via the DAYS cell for the full-epidemic comparison
   n_agents: 40
   seeds: [1, 2, 3]
   persona_seed: 2026
@@ -91,15 +91,25 @@ llm:
       hf_id: meta-llama/Llama-3.1-8B-Instruct
       vllm_id: hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
       gated: true            # accept the licence on Hugging Face and add HF_TOKEN to Colab secrets
-    mistral7b:               # backup if llama8b is not accessible
+    openthaigpt7b:           # Thai-tuned, based on Qwen2.5-7B-Instruct (OpenThaiGPT 1.5); the Qwen-family counterpart of typhoon8b
+      hf_id: openthaigpt/openthaigpt1.5-7b-instruct
+      vllm_id: null
+      gated: false
+    seallm7b:                # SEA-multilingual, based on Qwen2.5-7B (SeaLLMs v3); control for "Thai-specific" vs "SEA-general" tuning
+      hf_id: SeaLLMs/SeaLLMs-v3-7B-Chat
+      vllm_id: null
+      gated: false
+    mistral7b:               # English/European-centric; kept as a low-Thai-capability negative control
       hf_id: mistralai/Mistral-7B-Instruct-v0.3
       vllm_id: null
       gated: false
-    qwen1_5b:                # fast debug model
+    qwen1_5b:                # fast debug model only (excluded from the scientific comparison)
       hf_id: Qwen/Qwen2.5-1.5B-Instruct
       vllm_id: null
       gated: false
-  compare: [qwen7b, typhoon8b]
+  # 2x2 core panel (family x Thai-tuning): Llama base/tuned = llama8b/typhoon8b, Qwen base/tuned = qwen7b/openthaigpt7b.
+  # seallm7b (SEA control) and mistral7b (negative control) are optional extras.
+  compare: [llama8b, typhoon8b, qwen7b, openthaigpt7b]
 
 sensitivity:                 # notebook 04
   w_home_scale: [0.5, 1.0, 1.5]       # scales home contacts

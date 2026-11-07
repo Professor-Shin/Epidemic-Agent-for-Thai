@@ -36,9 +36,16 @@ def decision_metrics(run_dir):
     return out
 
 
-def load_runs(root=ROOT, pattern="*", include_mock=False):
+DEDUPE_KEYS = ["condition", "model_key", "seed", "tag", "days", "backend"]
+
+
+def load_runs(root=ROOT, pattern="*", include_mock=False, dedupe=True):
     """One row per completed run with metadata, epidemic metrics, decision metrics and runtime.
-    Runs made with the mock backend are pipeline tests and are left out unless include_mock=True."""
+    Runs made with the mock backend are pipeline tests and are left out unless include_mock=True.
+    dedupe=True drops runs that repeat the same (condition, model_key, seed, tag, days, backend) —
+    these appear when Colab is run twice or the config registry changes the run-id hash without
+    changing the result. The most recently finished run is kept (by runtime.json mtime), so re-running
+    a config always supersedes an older copy in the analysis; nothing on disk is overwritten."""
     rows = []
     for d in sorted((Path(root) / "outputs" / "runs").glob(pattern)):
         if not (d / "runtime.json").exists():
@@ -51,9 +58,24 @@ def load_runs(root=ROOT, pattern="*", include_mock=False):
         N = conf["cfg"]["population"]["N"]
         rows.append({"run_id": d.name, "condition": conf["condition"], "model_key": conf["model_key"],
                      "seed": conf["seed"], "tag": conf["tag"], "backend": conf["backend"],
+                     "days": rt.get("days", len(daily)), "finished_at": (d / "runtime.json").stat().st_mtime,
                      **epi_metrics(daily, N), **decision_metrics(d),
                      "runtime_s": rt["total_seconds"], "gpu": rt["env"].get("gpu")})
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    if dedupe and not df.empty:
+        df = (df.sort_values("finished_at").drop_duplicates(DEDUPE_KEYS, keep="last")
+                .drop(columns="finished_at").reset_index(drop=True))
+    elif not df.empty:
+        df = df.drop(columns="finished_at")
+    return df
+
+
+def export_metrics(root=ROOT, path=None, **kw):
+    """Write the deduped per-run summary table to outputs/metrics.csv so it can be attached to a report."""
+    runs = load_runs(root, **kw)
+    path = Path(path) if path else (Path(root) / "outputs" / "metrics.csv")
+    runs.to_csv(path, index=False)
+    return runs, path
 
 
 def load_daily(run_ids, root=ROOT):

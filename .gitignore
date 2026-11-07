@@ -8,7 +8,24 @@ __pycache__/
 .venv/
 venv/
 
+# Results: produced on Colab (Drive) or on the server, never committed
+outputs/
+
+# Server runs (scripts/server)
+logs/
+.hf_cache/
+.venv-gabm/
+containers/
+.singularity-cache/
+.singularity-tmp/
+.tmp/
+outputs/feasibility/.lock
+
+# Server manual: contains other users' names and the server address
+survival-manual-cuaim.pdf
+
 # OS / editor
+~$*
 .DS_Store
 Thumbs.db
 .vscode/
