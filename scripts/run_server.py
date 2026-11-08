@@ -9,6 +9,7 @@ unchanged, and runs already finished on Colab are skipped here.
   python scripts/run_server.py --model typhoon8b --stage D               # condition D, all seeds (after C)
   python scripts/run_server.py --model typhoon8b --stage order           # action-order check (notebook 04)
   python scripts/run_server.py --model typhoon8b --stage sens            # LLM sensitivity sweeps (notebook 04)
+  python scripts/run_server.py --model typhoon8b --stage baseline         # C under the alternative baseline_mix
 
 Normally called by scripts/server/run_model.sbatch; see scripts/server/README.md.
 """
@@ -25,7 +26,7 @@ import pandas as pd  # noqa: E402
 
 from gabm import load_config  # noqa: E402
 
-STAGES = ["check", "smoke", "feasibility", "C", "D", "order", "sens"]
+STAGES = ["check", "smoke", "feasibility", "C", "D", "order", "sens", "baseline"]
 
 
 def parse_args():
@@ -126,7 +127,7 @@ def main():
             sys.exit(f"D gate not met for {args.model}: {problem} (run stage C first, or pass --force)")
 
     from gabm.llm import load_backend
-    from gabm.sensitivity import action_order_variants, sensitivity_variants
+    from gabm.sensitivity import action_order_variants, baseline_mix_variants, sensitivity_variants
     from gabm.sim import contact_model_from_cfg, run_simulation
 
     personas = pd.read_csv(ROOT / cfg["personas"]["file"])
@@ -146,6 +147,9 @@ def main():
     elif args.stage == "sens":
         for tag, c2, cm2, p2 in sensitivity_variants(cfg, ROOT, personas, cm):
             run_simulation(c2, "C", seed=sens_seed, tag=tag, **{**common, "cm": cm2, "personas": p2})
+    elif args.stage == "baseline":
+        for tag, c2, cm2 in baseline_mix_variants(cfg, ROOT):
+            run_simulation(c2, "C", seed=sens_seed, tag=tag, **{**common, "cm": cm2})
     backend.unload()
 
 

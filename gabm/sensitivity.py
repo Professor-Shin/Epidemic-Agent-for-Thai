@@ -22,6 +22,25 @@ def sensitivity_variants(cfg, root, personas, cm):
         yield f"sens_wfh={v}", cfg, cm, rescale_wfh(personas, v)    # only WFH ability changes
 
 
+def baseline_mix_variants(cfg, root):
+    """(tag, cfg, contact model) with contacts.baseline_mix set to the alternative the report calls for.
+
+    q_out is measured against baseline_mix, the activity split of a normal day, which is an `assumption` row in
+    data/parameter_sources.csv with no source behind it. Four of five models produce q_out > 1 under the default
+    work_onsite = 0.55, i.e. residents going out MORE than the baseline during an epidemic, so the finding rests
+    on that one number. This variant raises work_onsite to contacts.employment_rate, the defensible upper bound
+    (everyone employed works on-site on a normal day), and rescales the other three in proportion. If the 2x2
+    effect keeps its sign here, the headline result does not depend on the assumption.
+    """
+    mix = cfg["contacts"]["baseline_mix"]
+    work = cfg["contacts"]["employment_rate"]
+    others = [a for a in mix if a != "work_onsite"]
+    rest = sum(mix[a] for a in others)
+    c2 = copy.deepcopy(cfg)
+    c2["contacts"]["baseline_mix"] = {**{a: mix[a] / rest * (1 - work) for a in others}, "work_onsite": work}
+    yield f"baseline=work{work}", c2, contact_model_from_cfg(c2, root)
+
+
 def action_order_variants(cfg):
     """(tag, cfg) with the resident action list reordered, to check that choices are not a prompt-order artefact."""
     base = list(cfg["actions"])
