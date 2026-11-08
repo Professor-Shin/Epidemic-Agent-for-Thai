@@ -60,8 +60,14 @@ so a missing `runtime.json` means the run was cut short.
 glibc is 2.17, below what current torch wheels need, so jobs run inside a Singularity container
 (`ENV_KIND="container"`). Jobs read `scripts/server/server.env`; nothing is passed on the command line.
 
-QoS wall-clock caps — **`TIME_GPU` above the cap leaves the job pending forever** in
-`QOSMaxWallDurationPerJobLimit`, which looks like an ordinary queue wait but never runs:
+Two QoS limits each look like an ordinary queue wait:
+
+- **`TIME_GPU` above MaxWall leaves the job pending forever** in `QOSMaxWallDurationPerJobLimit`.
+- **Every GPU QoS has `MaxJobsPU=1`** (and `MaxTRESPU gres/gpu:7g.40gb=1`), so one GPU job runs at a time
+  per user and the rest sit in `QOSMaxJobsPerUserLimit`. `MAX_PARALLEL` therefore changes nothing on this
+  cluster: array tasks run one after another whatever it is set to. **Estimate wall-clock as the sum of
+  every task, not the sum divided by `MAX_PARALLEL`.** Check with
+  `sacctmgr show qos format=Name,MaxJobsPU,MaxTRESPU,MaxWall`.
 
 | QoS | GPU | CPU / RAM | MaxWall |
 |---|---|---|---|
@@ -70,7 +76,12 @@ QoS wall-clock caps — **`TIME_GPU` above the cap leaves the job pending foreve
 | `gpu10gh` | 2g.10gb slice | 16 / 64 GB | 4 days |
 | `cpu40h` | — | 40 / 1 TB | 4 days |
 
-Measured on an A100: ~3.5–4.3 s per simulated day, 51 min – 1 h 18 min per model for C + D at 180 days.
+Measured on an A100: ~3.5–4.3 s per simulated day. One solo 180-day condition-C run takes 7.1 min
+(qwen7b) to 11.3 min (typhoon8b, seallm7b). A stage that iterates seeds puts all three on one GPU
+(`SEEDS_IN_PARALLEL=1`), so each run is ~3.3× slower but the stage finishes in about one run's solo time;
+C + D together is 51 min – 1 h 18 min per model. **`runtime_s` in `outputs/metrics.csv` is the slowed,
+shared-GPU figure — do not use it to estimate a solo run.** The `order`, `sens` and `baseline` stages run
+one seed at a time, so their cost is the solo time times the number of tags.
 Every run checkpoints daily, so a timeout only needs `submit_all.sh` again — finished runs are skipped.
 
 ## Commands
