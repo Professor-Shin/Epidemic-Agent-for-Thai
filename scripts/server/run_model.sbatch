@@ -33,7 +33,9 @@ for stage in $STAGES; do
       else
         run --stage "$stage"
       fi ;;
-    order|sens|baseline)
+    sens)
+      run --stage sens ${SENS_AXES:+--axes "$SENS_AXES"} ;;
+    order|baseline)
       run --stage "$stage" ;;
     *)
       echo "unknown stage '$stage' in STAGES" >&2; exit 1 ;;

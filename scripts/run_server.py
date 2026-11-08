@@ -37,6 +37,7 @@ def parse_args():
     ap.add_argument("--days", type=int, default=180, help="must equal DAYS in notebooks 04/05 (default 180)")
     ap.add_argument("--force", action="store_true",
                     help="feasibility: rerun even if the model is already in feasibility.csv; D: skip the C gate")
+    ap.add_argument("--axes", help="sens: comma-separated subset of the sensitivity axes (default: all four)")
     ap.add_argument("--kernel", default=os.environ.get("PAPERMILL_KERNEL", "python3"), help="Jupyter kernel for papermill")
     ap.add_argument("--backend", choices=["transformers", "vllm", "mock"],
                     help="default: llm.backend from base.yaml; 'mock' tests the pipeline on CPU (runs excluded from analysis)")
@@ -145,7 +146,8 @@ def main():
         for tag, c2 in action_order_variants(cfg):
             run_simulation(c2, "C", seed=sens_seed, tag=tag, **common)
     elif args.stage == "sens":
-        for tag, c2, cm2, p2 in sensitivity_variants(cfg, ROOT, personas, cm):
+        axes = args.axes.split(",") if args.axes else None
+        for tag, c2, cm2, p2 in sensitivity_variants(cfg, ROOT, personas, cm, axes=axes):
             run_simulation(c2, "C", seed=sens_seed, tag=tag, **{**common, "cm": cm2, "personas": p2})
     elif args.stage == "baseline":
         for tag, c2, cm2 in baseline_mix_variants(cfg, ROOT):

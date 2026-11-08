@@ -9,17 +9,34 @@ from .agents import rescale_wfh
 from .sim import contact_model_from_cfg
 
 
-def sensitivity_variants(cfg, root, personas, cm):
-    """One-at-a-time changes: (tag, cfg, contact model, personas)."""
+SENS_AXES = ["w_home_scale", "f_errand", "f_visit", "wfh_scale"]
+
+
+def sensitivity_variants(cfg, root, personas, cm, axes=None):
+    """One-at-a-time changes: (tag, cfg, contact model, personas).
+
+    `axes` keeps a subset of SENS_AXES, for when the GPU budget does not cover all four on every model.
+    `wfh_scale` is the one worth keeping if only one fits: it is the only axis that edits the prompt itself
+    (the "Can work from home" line of the persona), so it asks whether the agent acts on its own attributes.
+    The other three change how an action maps to contacts, and reach the agent only through the reported
+    case count it sees the next day.
+    """
     S = cfg["sensitivity"]
-    for v in S["w_home_scale"]:
-        yield f"sens_home={v}", cfg, contact_model_from_cfg(cfg, root, home_scale=v), personas
+    want = set(axes or SENS_AXES)
+    unknown = want - set(SENS_AXES)
+    if unknown:
+        raise ValueError(f"unknown sensitivity axes {sorted(unknown)}; choose from {SENS_AXES}")
+    if "w_home_scale" in want:
+        for v in S["w_home_scale"]:
+            yield f"sens_home={v}", cfg, contact_model_from_cfg(cfg, root, home_scale=v), personas
     for key in ["f_errand", "f_visit"]:
-        for v in S[key]:
-            c2 = copy.deepcopy(cfg); c2["contacts"][key] = v
-            yield f"sens_{key}={v}", c2, contact_model_from_cfg(c2, root), personas
-    for v in S["wfh_scale"]:
-        yield f"sens_wfh={v}", cfg, cm, rescale_wfh(personas, v)    # only WFH ability changes
+        if key in want:
+            for v in S[key]:
+                c2 = copy.deepcopy(cfg); c2["contacts"][key] = v
+                yield f"sens_{key}={v}", c2, contact_model_from_cfg(c2, root), personas
+    if "wfh_scale" in want:
+        for v in S["wfh_scale"]:
+            yield f"sens_wfh={v}", cfg, cm, rescale_wfh(personas, v)    # only WFH ability changes
 
 
 def baseline_mix_variants(cfg, root):
