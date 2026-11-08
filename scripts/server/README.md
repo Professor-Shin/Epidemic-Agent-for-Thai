@@ -26,9 +26,13 @@ cd /data/project/<your-group>/<your-folder>
 git clone https://github.com/Professor-Shin/Epidemic-Agent-for-Thai.git gabm && cd gabm
 
 # 2. Check the presets in scripts/server/server.env against your account
-check_qos                     # QoS names and limits; QOS and CPU_QOS must be listed here
+check_qos                     # QoS names and limits; QOS and CPU_QOS must be listed here, and
+                              # TIME_GPU/TIME_CPU must be <= the MaxWall column of QOS/CPU_QOS
 ldd --version | head -1       # glibc. If >= 2.28 you may use ENV_KIND="conda" instead of the container
-# Optional: check the driver version to choose TORCH_INDEX (cu128 needs "CUDA Version" >= 12.8)
+sinfo -o "%20P %5a %10l %12G %N"   # partition names and their gres; PARTITION must be listed here
+
+# Optional: the driver version decides TORCH_INDEX (cu128 needs "CUDA Version" >= 12.8). The smoke job in
+# step 6 prints it too, so skip this if the interactive queue is busy; cancel with scancel <jobid>.
 srun -p gpu --qos=interactive-gpu --gres=gpu:1g.5gb:1 -c2 --mem=8G --pty nvidia-smi
 
 # 3. Optional: copy the Colab results from your PC so finished work is skipped
@@ -78,6 +82,8 @@ Copy the results back with `scp -r`, `rsync`, or Cyberduck (manual 1.4).
 
 A 180-day run took about 1 h at T4 speed. The A100 is faster, and the 3 seeds run at the same time. The smoke
 log prints seconds per simulated day; multiply by 180 × 2 (C + D) for a per-model estimate.
+`TIME_GPU` cannot exceed the QoS MaxWall: `gpu40g` caps at 8 h, `gpu40g64` (64 CPUs, 128 GB) at 12 h, and
+`gpu10gh` at 4 days but only on a 10 GB slice, which needs `SEEDS_IN_PARALLEL=0`.
 Every run saves a checkpoint after each day. If a job hits `TIME_GPU`, run `submit_all.sh` again: finished runs
 are skipped and unfinished ones resume. Then run `submit_all.sh analyze` if the analysis ran too early.
 
@@ -86,5 +92,9 @@ are skipped and unfinished ones resume. Then run `submit_all.sh analyze` if the 
 - In MIG mode, `nvidia-smi` may not report per-slice memory. The VRAM columns of `feasibility.csv` can then be
   empty, but speed, schema-validity and consistency numbers are unaffected. The `gpu` column records the
   hardware, so A100 rows can be told apart from Colab's T4 rows.
+- `srun: Requested partition configuration not available now` means the partition exists but no node in it
+  currently offers the requested MIG profile (busy, drained, or that profile is not configured there). The job
+  just waits. Check what the partition really has with `sinfo -o "%20P %10l %12G %N"` and
+  `scontrol show node <node> | grep -i gres`, then pick a profile it lists.
 - If `singularity` is not found, set `MODULE_LOAD` in `server.env` (try `module avail` / `module spider singularity`).
 - If the analysis job is rejected, check `CPU_PARTITION`/`CPU_QOS` against `sinfo` and `check_qos`.

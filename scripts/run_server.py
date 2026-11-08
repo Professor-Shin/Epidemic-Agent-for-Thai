@@ -55,8 +55,16 @@ def check(cfg, model):
     from huggingface_hub import snapshot_download
     hf_id = cfg["llm"]["models"][model]["hf_id"]
     try:
-        path = snapshot_download(hf_id, local_files_only=True)
-        print(f"{model}: cached at {path}")
+        # Check only what transformers loads. download_models.py deliberately skips LICENSE, README and the
+        # native-format weight duplicates (original/, consolidated*), so asking for a complete snapshot here
+        # would report a correct download as incomplete.
+        path = Path(snapshot_download(hf_id, local_files_only=True, allow_patterns=["config.json"]))
+        weights = sorted(path.glob("*.safetensors")) or sorted(path.glob("*.bin"))
+        tokenizer = sorted(path.glob("tokenizer*")) or sorted(path.glob("*.model"))
+        if not weights or not tokenizer:
+            raise FileNotFoundError(
+                f"the cached snapshot at {path} has no {'weight' if not weights else 'tokenizer'} files")
+        print(f"{model}: cached at {path} ({len(weights)} weight files)")
     except Exception as e:
         offline = os.environ.get("HF_HUB_OFFLINE") == "1"
         msg = f"{model} ({hf_id}) is not in the local cache {os.environ.get('HF_HOME', '~/.cache/huggingface')}"

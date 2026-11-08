@@ -109,8 +109,8 @@ cd gabm
 
 ```bash
 check_qos                     # ดูชื่อ QoS ที่บัญชีเราใช้ได้ ต้องมี gpu40g และ cpu40h (หรือชื่อที่ใกล้เคียง)
-ldd --version | head -1       # ดูเวอร์ชัน glibc
-sinfo                         # ดูชื่อ partition
+ldd --version | head -1       # ดูเวอร์ชัน glibc (CU-AIM = 2.17 ต่ำกว่า 2.28 จึงต้องใช้ container ตามค่าตั้งต้น)
+sinfo -o "%20P %5a %10l %12G %N"   # ดูชื่อ partition และ gres ที่มีจริง
 ```
 
 | ค่าใน server.env | ค่าตั้งต้น | ต้องแก้เมื่อไหร่ |
@@ -121,6 +121,7 @@ sinfo                         # ดูชื่อ partition
 | `ENV_KIND` | `container` (Singularity) | glibc ≥ 2.28 จะเปลี่ยนเป็น `conda` ก็ได้ ถ้าไม่แน่ใจให้คงค่าเดิม |
 | `TORCH_INDEX` | `cu128` | ดูข้อถัดไป |
 | `MAX_PARALLEL` | `2` | ให้รันพร้อมกันกี่โมเดล ถ้าคิวว่างเพิ่มได้ |
+| `TIME_GPU` | `08:00:00` | ต้องไม่เกินคอลัมน์ `MaxWall` ของ QoS ที่ใช้ (`gpu40g` = 8 ชม., `gpu40g64` = 12 ชม., `gpu10gh` = 4 วัน แต่ slice เล็กแค่ 10 GB ต้องตั้ง `SEEDS_IN_PARALLEL=0`) |
 
 **เช็กเวอร์ชัน CUDA driver (ไม่บังคับ):** ใช้ GPU slice เล็กสุดชั่วคราวผ่าน QoS interactive
 
@@ -261,7 +262,7 @@ bash scripts/server/submit_all.sh
 
 - **3 seeds รันพร้อมกันบน GPU ใบเดียว** ใช้ VRAM รวมประมาณ 30 GB
 - **D รันเฉพาะเมื่อ C ผ่าน** คือ C ครบทุก seed และ fallback < 5% ซึ่งเป็นเกณฑ์เดียวกับ notebook 05
-- **บันทึก checkpoint ทุกวันจำลอง** ถ้างานหมดเวลา (`TIME_GPU` = 2 วัน) หรือถูก kill ให้รัน `bash scripts/server/submit_all.sh` ใหม่
+- **บันทึก checkpoint ทุกวันจำลอง** ถ้างานหมดเวลา (`TIME_GPU` = 8 ชม. ตามเพดานของ QoS `gpu40g`) หรือถูก kill ให้รัน `bash scripts/server/submit_all.sh` ใหม่
   - run ที่เสร็จแล้วจะถูกข้าม และ run ที่ค้างจะทำต่อจากวันล่าสุด
 - **feasibility พังไม่ทำให้งานหยุด** เพราะ C/D ไม่ได้ใช้ผล feasibility งานจะไปต่อเอง
 
