@@ -10,8 +10,10 @@ cd "$PROJECT_DIR"
 
 read -ra MODEL_LIST <<< "$MODELS"
 MODEL="${MODEL_LIST[$SLURM_ARRAY_TASK_ID]}"
-SEEDS=$(in_env python -c 'from gabm import load_config; print(*load_config()["sim"]["seeds"])')
-run() { in_env python scripts/run_server.py --model "$MODEL" --days "$DAYS" "$@"; }
+# SEEDS_OVERRIDE and FORCE are for one-off supplementary runs, e.g. a longer horizon where condition C does
+# not exist yet at that DAYS and the D gate would therefore refuse. Leave both unset for the panel.
+SEEDS="${SEEDS_OVERRIDE:-$(in_env python -c 'from gabm import load_config; print(*load_config()["sim"]["seeds"])')}"
+run() { in_env python scripts/run_server.py --model "$MODEL" --days "$DAYS" ${FORCE:+--force} "$@"; }
 
 echo "[$(date '+%F %T')] model=$MODEL days=$DAYS stages='$STAGES' seeds='$SEEDS' node=$(hostname)"
 run --stage check
@@ -31,7 +33,7 @@ for stage in $STAGES; do
       else
         run --stage "$stage"
       fi ;;
-    order|sens)
+    order|sens|baseline)
       run --stage "$stage" ;;
     *)
       echo "unknown stage '$stage' in STAGES" >&2; exit 1 ;;
