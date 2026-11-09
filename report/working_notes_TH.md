@@ -398,7 +398,8 @@ attack rate แกว่งตามลำดับ 0.051 (openthaigpt7b) ถึ
 | `report/final_report_TH.md` | **เสร็จทุกหัวข้อ** รวมบทคัดย่อและบทสรุป |
 | `report/Final_Report_TH.docx` | build แล้ว (รูป 4 รูป) |
 | บรรณานุกรมเต็ม (venue / หน้า / DOI) ของสามเปเปอร์หลัก | **ต้องให้ผู้ใช้เติม** ไม่มีไฟล์เปเปอร์ในรีโป |
-| presentation | ยังไม่เริ่ม `report/present.html` เป็นของเก่าชุด Colab 2 โมเดล 30 วัน ต้องรื้อใหม่ |
+| presentation | **เสร็จ** `report/slides.html` 21 สไลด์ ภาษาไทย ฝังรูปทั้งสี่จาก `outputs/figures/` · `report/present.html` ซึ่งเป็นแดชบอร์ดชุด Colab เดิมติดป้ายล้าสมัยแล้ว |
+| ตรวจตัวเลขย้อนกลับ | **เสร็จ** หัวข้อ 5.1–5.7 สร้างซ้ำได้ตรงทุกค่าจาก `scripts/analysis/` |
 
 ---
 
