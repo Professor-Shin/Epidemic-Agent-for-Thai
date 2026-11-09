@@ -29,9 +29,10 @@ pd.set_option("display.width", 220)
 print(df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 print()
 p = df.pivot(index="model", columns="tag", values="attack")[list(order)]
-print("attack rate spread:"); print(p.assign(spread=p.max(1) - p.min(1)).to_string(float_format=lambda x: f"{x:.3f}"))
+print("attack rate spread:"); print(p.assign(spread=p.max(axis=1) - p.min(axis=1)).to_string(float_format=lambda x: f"{x:.3f}"))
 print()
 print("localisation effect (Thai-tuned - base), by order:")
 for a, b, name in [("typhoon8b", "llama8b", "Llama"), ("openthaigpt7b", "qwen7b", "Qwen")]:
     print(f"  {name:<6}", {t: round(p.loc[a, t] - p.loc[b, t], 3) for t in order})
-df.to_csv(f"{Path(__file__).parent}/order.csv", index=False)
+OUT = ROOT / "outputs" / "analysis"; OUT.mkdir(parents=True, exist_ok=True)
+df.to_csv(OUT / "order.csv", index=False)

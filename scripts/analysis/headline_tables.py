@@ -34,7 +34,8 @@ for d in sorted((ROOT / "outputs" / "runs").iterdir()):
                      secs=rt.get("seconds"), run=d.name))
 df = pd.DataFrame(rows)
 pd.set_option("display.width", 250)
-df.to_csv(f"{__import__('os').environ['S']}/headline.csv", index=False) if False else df.to_csv("/tmp/claude-1000/-home-siwakorn-Documents-bioinfo-Epidemic-Agent-for-Thai/42bacb72-0ffa-4590-8f06-ca2a2584cead/scratchpad/headline.csv", index=False)
+OUT = ROOT / "outputs" / "analysis"; OUT.mkdir(parents=True, exist_ok=True)
+df.to_csv(OUT / "headline.csv", index=False)
 print("n runs:", len(df), "| conditions:", df.cond.value_counts().to_dict())
 print()
 g = df.groupby(["cond", "model"]).agg(n=("attack","size"), attack=("attack","mean"), sd=("attack","std"),
