@@ -18,11 +18,32 @@ plt.rcParams.update({"font.size": 10, "axes.edgecolor": GRID, "axes.labelcolor":
                      "axes.facecolor": SURFACE, "savefig.facecolor": SURFACE})
 
 # ---------- Figure 1: the 2x2 ----------
+# Read the attack rates rather than hardcoding them, so the arrow labels cannot drift from the
+# report: a delta computed from 3-decimal constants prints -0.333 where the report says -0.332.
+import json
+import pandas as pd
+
+PAIRS = [("llama8b", "typhoon8b"), ("qwen7b", "openthaigpt7b")]
 fam = ["Llama 3.1 8B", "Qwen 2.5 7B"]
-data = {"C": {"base": [0.819, 0.830], "tuned": [0.640, 0.858],
-              "bl": [("llama8b", "typhoon8b"), ("qwen7b", "openthaigpt7b")]},
-        "D": {"base": [0.601, 0.666], "tuned": [0.268, 0.723],
-              "bl": [("llama8b", "typhoon8b"), ("qwen7b", "openthaigpt7b")]}}
+
+
+def attack_by_model(cond, days=180):
+    acc = {}
+    for d in sorted((ROOT / "outputs" / "runs").glob(f"{cond}_*")):
+        if not (d / "runtime.json").exists():
+            continue
+        c = json.loads((d / "config.json").read_text())
+        if c["tag"] or c["cfg"]["sim"]["days"] != days:
+            continue
+        v = pd.read_csv(d / "daily.csv")
+        acc.setdefault(c["model_key"], []).append(1 - v.S.iloc[-1] / v[["S", "E", "I", "R"]].iloc[-1].sum())
+    return {m: sum(x) / len(x) for m, x in acc.items()}
+
+
+data = {}
+for cond in ("C", "D"):
+    a = attack_by_model(cond)
+    data[cond] = {"base": [a[b] for b, _ in PAIRS], "tuned": [a[t] for _, t in PAIRS], "bl": PAIRS}
 REF = {"C": ("A: no behaviour (0.795)", 0.795), "D": ("A: no behaviour (0.795)", 0.795)}
 
 fig, axes = plt.subplots(1, 2, figsize=(9.6, 4.3), sharey=True)
