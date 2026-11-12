@@ -706,6 +706,42 @@ df = (df.sort_values(<span class="s">"finished_at"</span>)
   <p>หลักฐานเชิงกลไกที่มาสนับสนุนคือการทดลอง agent 13 — <code>openthaigpt7b</code> ซึ่งจูนไทย กลับเป็นตัวเดียวที่ <strong>ไม่อ่าน persona ของตัวเองเลย</strong> การจูนภาษาไม่ได้รับประกันแม้แต่ว่าโมเดลจะใช้ข้อมูลที่ให้ไป</p>
 </div>
 
+<h4>แล้ว agent เลือกทำอะไรจริง ๆ</h4>
+
+<p>attack rate เป็นผลลัพธ์ปลายทาง ตัวที่อยู่ระหว่างทางคือสัดส่วนการเลือกกิจกรรมรายวัน ซึ่งนับจาก 410,400 การตัดสินใจทั้งหมด ตัวเลขเป็นสัดส่วนถ่วงน้ำหนักตาม persona คือค่าเดียวกับที่ q̄<sub>out</sub> ใช้</p>
+
+<div class="tw"><table>
+<thead><tr><th></th><th class="num">อยู่บ้าน C</th><th class="num">ไปทำงาน C</th><th class="num">อยู่บ้าน D</th><th class="num">ไปทำงาน D</th></tr></thead>
+<tbody>
+<tr><td>typhoon8b</td><td class="num">0.392</td><td class="num">0.325</td><td class="num">0.621</td><td class="num">0.214</td></tr>
+<tr><td>llama8b</td><td class="num">0.155</td><td class="num">0.660</td><td class="num">0.283</td><td class="num">0.522</td></tr>
+<tr><td>qwen7b</td><td class="num">0.075</td><td class="num">0.693</td><td class="num">0.266</td><td class="num">0.619</td></tr>
+<tr><td>openthaigpt7b</td><td class="num">0.023</td><td class="num">0.773</td><td class="num">0.117</td><td class="num">0.698</td></tr>
+<tr><td>seallm7b</td><td class="num">0.197</td><td class="num">0.801</td><td class="num">0.291</td><td class="num">0.709</td></tr>
+</tbody></table></div>
+
+<p class="small">ส่วนที่เหลือคือ <code>essential_errand</code> และ <code>visit_family</code> คำนวณด้วย <code>scripts/analysis/action_mix.py</code> รูปอยู่ที่ <code>outputs/figures/06_action_mix.png</code></p>
+
+<div class="call key">
+  <span class="lbl">การจูนกลับเครื่องหมายบนพฤติกรรม ไม่ใช่แค่บนผลลัพธ์</span>
+  <p>ตระกูล Llama สัดส่วนอยู่บ้านเพิ่มจาก 0.155 เป็น 0.392 ส่วนตระกูล Qwen ลดจาก 0.075 เหลือ 0.023 ทิศทางตรงกับตาราง attack rate ข้างบนทุกช่อง พฤติกรรมจึงเป็นตัวกลางที่มองเห็นได้ ไม่ใช่กล่องดำ</p>
+</div>
+
+<div class="call trap">
+  <span class="lbl">พื้นที่ทางเลือกสี่แบบ ถูกใช้จริงสามแบบ</span>
+  <p><code>visit_family</code> ถูกเลือก 326 ครั้งจาก 410,400 คิดเป็น 0.08% และทั้งหมดมาจาก <code>llama8b</code> ตัวเดียว ส่วน <code>seallm7b</code> เลือก <code>essential_errand</code> เพียง 102 ครั้งใน C และครั้งเดียวใน D จึงเหลือทางเลือกจริงสองทาง การเทียบข้ามโมเดลต้องอ่านคู่กับข้อจำกัดนี้</p>
+</div>
+
+<div class="call trap">
+  <span class="lbl">สัดส่วนอยู่บ้านอย่างเดียวไม่ได้เรียงลำดับโมเดล</span>
+  <p><code>seallm7b</code> อยู่บ้านมากกว่า <code>llama8b</code> (0.197 เทียบ 0.155) แต่ attack rate สูงกว่า (0.845 เทียบ 0.819) เพราะแปลงวันที่เหลือเป็น <code>work_onsite</code> เกือบทั้งหมด ค่าที่เรียงลำดับได้ตรงกับ attack rate คือ q̄<sub>out</sub> ซึ่งถ่วงน้ำหนักแต่ละกิจกรรมด้วยระดับการสัมผัสของมัน นี่คือเหตุผลที่ <code>contacts.py</code> ต้องมีอยู่</p>
+</div>
+
+<div class="call trap">
+  <span class="lbl">พฤติกรรมแทบไม่ตอบสนองต่อยอดเคส</span>
+  <p>เทียบค่าเฉลี่ยของวันที่ 0–29 วันที่ 60–89 และวันที่ 150–179 ช่วงความต่างสูงสุดคือ 0.051 ใน <code>qwen7b</code> และไม่เกิน 0.035 ในโมเดลที่เหลือ สหสัมพันธ์กับยอดเคสที่รายงานอยู่ระหว่าง −0.14 ถึง +0.27 agent ตอบสนองต่อ persona ของตัวเองมากกว่าตอบสนองต่อสถานการณ์ที่เห็นใน prompt ซึ่งต่างจาก Williams et al. ที่ agent แบนเส้นโค้งได้เอง</p>
+</div>
+
 <h3 id="s4-3">4.2 ข้อค้นพบที่ขัดกับ Williams et al.</h3>
 <div class="tw"><table>
 <thead><tr><th>เงื่อนไข</th><th class="num">attack rate</th></tr></thead>
