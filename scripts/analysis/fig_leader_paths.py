@@ -29,7 +29,7 @@ PANELS = [("typhoon8b", "D_typhoon8b_s1_b823e074", "seed 1"),
           ("qwen7b", "D_qwen7b_s1_e12d6e4d", "seed 1"),
           ("seallm7b", "D_seallm7b_s1_3ce1a6e3", "seed 1"),
           ("openthaigpt7b", "D_openthaigpt7b_s1_6a8f8b94", "seed 1"),
-          ("llama8b", "D_llama8b_s2_054ddc7a", "seed 2 — the only escalation")]
+          ("llama8b", "D_llama8b_s2_054ddc7a", "seed 2 — escalated, 4 weeks")]
 
 fig, axes = plt.subplots(2, 3, figsize=(11.5, 5.6), sharex=True, sharey=True)
 for ax, (model, run, note) in zip(axes.ravel(), PANELS):
@@ -37,7 +37,8 @@ for ax, (model, run, note) in zip(axes.ravel(), PANELS):
     for i, c in enumerate(lvl):                       # policy as a background band, one per week
         ax.axvspan(i - 0.5, i + 0.5, color=BAND[c], lw=0, zorder=0)
     ax.plot(wk, cases, color=LINE, lw=2, zorder=3)
-    ax.axhline(528, color=INK2, ls="--", lw=1, zorder=2)
+    for y in (528, 602):                               # the two case loads that ever triggered strict
+        ax.axhline(y, color=INK2, ls="--", lw=1, zorder=2)
     ax.set_title(f"{model}  ·  {note}", fontsize=10, color=INK, pad=6, loc="left")
     ax.set_xlim(-0.5, len(wk) - 0.5); ax.set_ylim(0, 1050)
     ax.grid(axis="y", color=GRID, lw=0.6, zorder=1)
@@ -51,7 +52,7 @@ h = [plt.Rectangle((0, 0), 1, 1, color=BAND[k]) for k in ["open", "limited", "st
 h.append(plt.Line2D([0], [0], color=LINE, lw=2))
 h.append(plt.Line2D([0], [0], color=INK2, ls="--", lw=1))
 fig.legend(h, ["policy: open", "policy: limited", "policy: strict", "reported cases",
-               "528 — the only case load that ever triggered strict"],
+               "528 and 602 — the only case loads that ever triggered strict"],
            frameon=False, ncol=5, fontsize=9, labelcolor=INK2,
            loc="upper center", bbox_to_anchor=(0.5, 0.945))
 fig.suptitle("The LLM leader reports the epidemic correctly and acts the same way regardless",
