@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คู่มืออธิบายโครงงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fcfcfb; --surface:#ffffff; --surface-2:#f4f3ef; --border:#e1e0d9; --border-2:#d3d2c9;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#898781;
+  --blue:#2a78d6; --orange:#eb6834; --green:#1baf7a; --grey:#898781; --purple:#8a5cd6;
+  --accent:#2a78d6; --code-bg:#f6f5f1; --code-ink:#1d1c1a; --code-comment:#898781;
+  --warn-bg:#fdf3ea; --warn-br:#eb6834; --good-bg:#eaf7f1; --good-br:#1baf7a; --info-bg:#eaf1fb; --info-br:#2a78d6;
+  --maxw:74ch;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131312; --surface:#1b1b19; --surface-2:#232321; --border:#302f2c; --border-2:#3d3c38;
+    --ink:#f2f1ed; --ink-2:#b5b3ac; --ink-3:#86847e;
+    --blue:#6fa8ef; --orange:#f58d63; --green:#3fcb95; --grey:#9a9891; --purple:#a98bea;
+    --accent:#6fa8ef; --code-bg:#1f1f1d; --code-ink:#e8e7e2; --code-comment:#86847e;
+    --warn-bg:#2a1d15; --warn-br:#f58d63; --good-bg:#13261f; --good-br:#3fcb95; --info-bg:#15202f; --info-br:#6fa8ef;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131312; --surface:#1b1b19; --surface-2:#232321; --border:#302f2c; --border-2:#3d3c38;
+  --ink:#f2f1ed; --ink-2:#b5b3ac; --ink-3:#86847e;
+  --blue:#6fa8ef; --orange:#f58d63; --green:#3fcb95; --grey:#9a9891; --purple:#a98bea;
+  --accent:#6fa8ef; --code-bg:#1f1f1d; --code-ink:#e8e7e2; --code-comment:#86847e;
+  --warn-bg:#2a1d15; --warn-br:#f58d63; --good-bg:#13261f; --good-br:#3fcb95; --info-bg:#15202f; --info-br:#6fa8ef;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:70px}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16.5px; line-height:1.78; -webkit-font-smoothing:antialiased;
+}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+}
+.topbar-in{max-width:1180px; margin:0 auto; padding:9px 16px; display:flex; align-items:center; gap:12px}
+.brand{font-weight:600; font-size:14.5px; color:var(--ink); letter-spacing:.1px; white-space:nowrap;
+       overflow:hidden; text-overflow:ellipsis}
+.brand span{color:var(--ink-3); font-weight:400}
+.spacer{flex:1}
+.btn{
+  border:1px solid var(--border-2); background:var(--surface); color:var(--ink-2);
+  border-radius:8px; padding:5px 11px; font:inherit; font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.btn:hover{color:var(--ink); border-color:var(--ink-3)}
+.progress{position:absolute; left:0; bottom:-1px; height:2px; background:var(--accent); width:0}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:250px minmax(0,1fr); gap:44px}
+nav.toc{position:sticky; top:62px; align-self:start; max-height:calc(100vh - 80px); overflow:auto; padding:26px 0 40px; font-size:13.5px}
+nav.toc h2{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); margin:0 0 10px; font-weight:600}
+nav.toc a{display:block; color:var(--ink-2); text-decoration:none; padding:3.5px 10px; border-left:2px solid transparent; line-height:1.5}
+nav.toc a:hover{color:var(--ink)}
+nav.toc a.sub{padding-left:22px; font-size:12.5px; color:var(--ink-3)}
+nav.toc a.active{color:var(--accent); border-left-color:var(--accent); background:var(--surface-2)}
+main{min-width:0; padding:26px 0 90px}
+
+@media (max-width:900px){
+  .wrap{grid-template-columns:1fr; gap:0}
+  nav.toc{position:static; max-height:none; border-bottom:1px solid var(--border); padding:14px 0}
+  nav.toc.collapsed .toc-body{display:none}
+  main{padding-top:18px}
+}
+
+/* ---------- prose ---------- */
+.hero{padding:34px 0 10px; border-bottom:1px solid var(--border); margin-bottom:30px}
+.hero .kicker{color:var(--orange); font-size:12.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase}
+h1{font-size:clamp(25px,4.3vw,36px); line-height:1.3; margin:.3em 0 .25em; letter-spacing:-.01em; font-weight:700}
+.hero p.lede{color:var(--ink-2); font-size:17px; max-width:66ch; margin:.6em 0 1.1em}
+.meta{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:6px}
+.pill{font-size:12px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--border);
+      border-radius:999px; padding:3px 11px}
+
+h2{font-size:clamp(20px,3vw,25px); margin:2.4em 0 .5em; line-height:1.35; letter-spacing:-.005em; font-weight:700;
+   padding-top:.35em; border-top:1px solid var(--border)}
+h2:first-of-type{border-top:none}
+h2 .num{color:var(--ink-3); font-weight:500; font-size:.72em; margin-inline-end:.45em}
+h3{font-size:18.5px; margin:1.9em 0 .4em; line-height:1.4; font-weight:600}
+h4{font-size:16px; margin:1.5em 0 .3em; color:var(--ink-2); font-weight:600}
+p{margin:.75em 0; max-width:var(--maxw)}
+ul,ol{max-width:var(--maxw); padding-inline-start:1.35em; margin:.7em 0}
+li{margin:.3em 0}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--accent)}
+hr{border:none; border-top:1px solid var(--border); margin:2.4em 0}
+
+p code,li code,td code,th code{
+  background:var(--code-bg); border:1px solid var(--border); border-radius:5px;
+  padding:1px 5px; font-size:.87em; color:var(--code-ink); white-space:nowrap;
+}
+pre{
+  background:var(--code-bg); border:1px solid var(--border); border-radius:10px;
+  padding:14px 16px; overflow:auto; font-size:13px; line-height:1.65; margin:1em 0;
+  color:var(--code-ink);
+}
+pre .c{color:var(--code-comment); font-style:italic}
+pre .k{color:var(--purple)}
+pre .s{color:var(--green)}
+.filename{
+  font-size:11.5px; color:var(--ink-3); margin:1.3em 0 -.75em; letter-spacing:.02em;
+  font-family:"IBM Plex Mono",monospace;
+}
+
+/* ---------- math ---------- */
+.math{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+  padding:14px 18px; margin:1.1em 0; text-align:center; overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace; font-size:15px; color:var(--ink); line-height:2;
+}
+.math .v{font-style:italic; color:var(--blue)}
+.math small{display:block; font-family:"IBM Plex Sans Thai",sans-serif; color:var(--ink-3); font-size:12.5px; margin-top:4px; font-style:normal}
+
+/* ---------- callouts ---------- */
+.call{border-left:3px solid var(--border-2); background:var(--surface-2); border-radius:0 10px 10px 0;
+      padding:12px 16px; margin:1.2em 0; max-width:var(--maxw)}
+.call p{margin:.35em 0}
+.call .lbl{font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; display:block; margin-bottom:3px}
+.call.why{background:var(--info-bg); border-left-color:var(--info-br)} .call.why .lbl{color:var(--blue)}
+.call.trap{background:var(--warn-bg); border-left-color:var(--warn-br)} .call.trap .lbl{color:var(--orange)}
+.call.key{background:var(--good-bg); border-left-color:var(--good-br)} .call.key .lbl{color:var(--green)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto; margin:1.1em 0; border:1px solid var(--border); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px}
+th,td{padding:8px 13px; text-align:left; border-bottom:1px solid var(--border); vertical-align:top}
+thead th{background:var(--surface-2); font-weight:600; font-size:12.5px; color:var(--ink-2);
+         letter-spacing:.02em; white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right; font-family:"IBM Plex Mono",monospace; font-size:13px; white-space:nowrap}
+td.pos{color:var(--orange); font-weight:600} td.neg{color:var(--blue); font-weight:600}
+caption{caption-side:bottom; text-align:left; padding:8px 13px; font-size:12.5px; color:var(--ink-3)}
+
+/* ---------- tree ---------- */
+.tree{
+  background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px;
+  font-family:"IBM Plex Mono",monospace; font-size:13px; line-height:1.85; overflow-x:auto; margin:1em 0;
+}
+.tree .d{color:var(--blue); font-weight:500}
+.tree .n{color:var(--ink-3)}
+
+/* ---------- loop diagram ---------- */
+figure{margin:1.6em 0; max-width:var(--maxw)}
+figure svg{width:100%; height:auto; display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px}
+figcaption{font-size:12.5px; color:var(--ink-3); margin-top:7px; line-height:1.6}
+
+footer{border-top:1px solid var(--border); margin-top:48px; padding:22px 0 0; color:var(--ink-3); font-size:13px}
+footer p{max-width:none}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">คู่มืออธิบายโครงงาน <span>· Thai-context GABM-SEIR</span></div>
+    <div class="spacer"></div>
+    <button class="btn" id="theme">สลับธีม</button>
+  </div>
+  <div class="progress" id="prog"></div>
+</div>
+
+<div class="wrap">
+
+<nav class="toc" id="toc">
+  <h2>สารบัญ</h2>
+  <div class="toc-body">
+    <a href="#s0">0 · คำถามวิจัยกำหนดทุกอย่าง</a>
+    <a href="#s1">1 · ความรู้พื้นหลังที่ยืมมา</a>
+    <a href="#s1-1" class="sub">SEIR และ final size</a>
+    <a href="#s1-3" class="sub">Contact matrices</a>
+    <a href="#s1-4" class="sub">สามเปเปอร์ที่ต่อยอด</a>
+    <a href="#s2">2 · โครงสร้างโฟลเดอร์</a>
+    <a href="#s3">3 · โค้ดหลักทีละไฟล์</a>
+    <a href="#s3-1" class="sub">contacts.py — สะพาน</a>
+    <a href="#s3-2" class="sub">agents.py — ประชากร</a>
+    <a href="#s3-3" class="sub">llm.py — prompt</a>
+    <a href="#s3-4" class="sub">policy.py — B และ D</a>
+    <a href="#s3-5" class="sub">sim.py — ลูปวัน</a>
+    <a href="#s3-6" class="sub">io.py — run id</a>
+    <a href="#s3-7" class="sub">analysis.py — dedupe</a>
+    <a href="#s4">4 · เงื่อนไข A–D และผลหลัก</a>
+    <a href="#s4-2" class="sub">ผล 2×2</a>
+    <a href="#s4-4" class="sub">sensitivity 5.8</a>
+    <a href="#s4-5" class="sub">ขอบฟ้ายาว 5.10</a>
+    <a href="#s5">5 · การรันบนเซิร์ฟเวอร์</a>
+    <a href="#s6">6 · scripts/analysis</a>
+    <a href="#s7">7 · เตรียมตอบกรรมการ</a>
+    <a href="#s8">8 · สรุปว่าร้อยกันยังไง</a>
+  </div>
+</nav>
+
+<main>
+
+<div class="hero">
+  <div class="kicker">คู่มืออ่านโครงงานจากศูนย์</div>
+  <h1>เมื่อการจูนภาษาไทยไม่ได้ทำให้ LLM จำลองคนไทยได้ดีขึ้นเสมอไป</h1>
+  <p class="lede">อธิบายตั้งแต่คำถามวิจัย ลงไปถึงบรรทัดโค้ด แล้วย้อนขึ้นมาที่ผล — โฟลเดอร์ไหนคืออะไร โค้ดส่วนไหนสำคัญ ทำไมถึงออกแบบแบบนี้ และใช้ความรู้พื้นหลังอะไรบ้าง</p>
+  <div class="meta">
+    <span class="pill">GABM × SEIR</span>
+    <span class="pill">แผง 2×2 · 5 โมเดล · 6 ซีด</span>
+    <span class="pill">410,400 การตัดสินใจ</span>
+    <span class="pill">ไลบรารี ~800 บรรทัด</span>
+  </div>
+</div>
+
+<!-- ============ 0 ============ -->
+<h2 id="s0"><span class="num">0</span>คำถามวิจัยกำหนดทุกอย่างที่เหลือ</h2>
+
+<p>คำถามคือ <strong>“โมเดลที่จูนภาษาไทยแล้ว จำลองพฤติกรรมคนไทยได้ดีกว่าโมเดลฐานหรือไม่”</strong></p>
+
+<p>ประโยคนี้มีกับดักซ่อนอยู่ ถ้าเอา <code>typhoon8b</code> (จูนไทย) ไปเทียบกับ <code>qwen7b</code> (ไม่จูน) แล้วเจอว่าต่างกัน คุณสรุปอะไรไม่ได้เลย เพราะทั้งสองตัวต่างกันสองอย่างพร้อมกัน — ต่างที่การจูน <strong>และ</strong> ต่างที่ตระกูลโมเดลฐาน (Llama กับ Qwen) ความต่างที่เห็นอาจมาจากอย่างหลังล้วน ๆ</p>
+
+<p>ทางแก้มาตรฐานในสถิติคือ <strong>factorial design</strong> ต้องจับคู่ให้ตัวแปรเปลี่ยนทีละตัว</p>
+
+<div class="tw"><table>
+<thead><tr><th></th><th>ไม่จูน</th><th>จูนไทย</th></tr></thead>
+<tbody>
+<tr><td>ตระกูล Llama 3.1 8B</td><td><code>llama8b</code></td><td><code>typhoon8b</code> (SCB10X)</td></tr>
+<tr><td>ตระกูล Qwen 2.5 7B</td><td><code>qwen7b</code></td><td><code>openthaigpt7b</code></td></tr>
+</tbody></table></div>
+
+<p>ตอนนี้ “ผลของการจูน” วัดได้สองครั้งอย่างอิสระ — ครั้งหนึ่งในแต่ละแถว ถ้าได้เครื่องหมายเดียวกันสองครั้ง แปลว่าเป็นผลของการจูนจริง ถ้าได้คนละเครื่องหมาย แปลว่า “การจูนไทย” ไม่ใช่ปัจจัยที่พยากรณ์พฤติกรรมได้</p>
+
+<p>เพิ่ม <code>seallm7b</code> (จูน SEA หลายภาษา ฐาน Qwen เหมือนกัน) เป็นตัวควบคุมอีกชั้น เพื่อถามว่า “จูนไทยเฉพาะ” ต่างจาก “จูนภูมิภาค” ไหม ส่วน <code>mistral7b</code> เป็น negative control (ความสามารถภาษาไทยต่ำ) และ <code>qwen1_5b</code> ไว้ debug อย่างเดียว ห้ามเอาเข้าการเปรียบเทียบ</p>
+
+<div class="call key">
+  <span class="lbl">แก่นเรื่อง</span>
+  <p>ทั้งโครงสร้างโปรเจกต์คือการรับใช้ตารางสี่ช่องนั้น ทุกอย่างที่เหลือมีไว้เพื่อให้สี่ช่องนั้นเทียบกันได้อย่างยุติธรรม</p>
+</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1"><span class="num">1</span>ความรู้พื้นหลังที่ยืมมา</h2>
+
+<h3 id="s1-1">1.1 SEIR และสมการ final size</h3>
+<p>SEIR คือแบบจำลองโรคระบาดแบบ compartment ประชากรถูกแบ่งเป็นสี่ถัง</p>
+
+<div class="math">
+d<span class="v">S</span>/dt = −β·<span class="v">SI</span>/<span class="v">N</span> &nbsp;&nbsp;·&nbsp;&nbsp;
+d<span class="v">E</span>/dt = β·<span class="v">SI</span>/<span class="v">N</span> − σ<span class="v">E</span> &nbsp;&nbsp;·&nbsp;&nbsp;
+d<span class="v">I</span>/dt = σ<span class="v">E</span> − γ<span class="v">I</span> &nbsp;&nbsp;·&nbsp;&nbsp;
+d<span class="v">R</span>/dt = γ<span class="v">I</span>
+</div>
+
+<p><strong>E</strong> คือ “ติดแล้วแต่ยังไม่แพร่” (ระยะฟักตัว) ซึ่งสำคัญกับโรคทางเดินหายใจ ถ้าใช้ SIR เฉย ๆ จะได้ยอดพีคที่มาเร็วเกินจริง</p>
+
+<p>ค่าในโปรเจกต์นี้ (<code>config/base.yaml</code>) คือ β₀ = 0.2 ต่อวัน, latent 4 วัน (σ = 0.25), infectious 10 วัน (γ = 0.1) ทำให้</p>
+
+<div class="math"><span class="v">R</span>₀ = β₀/γ = 0.2 × 10 = <strong>2.0</strong></div>
+
+<p>จาก <strong>Kermack–McKendrick final size equation</strong> สัดส่วนคนที่ติดเชื้อตลอดการระบาดหาได้จาก</p>
+
+<div class="math">
+<span class="v">z</span> = 1 − e<sup>−<span class="v">R</span>₀<span class="v">z</span></sup>
+<small>แก้ที่ R₀ = 2 ได้ z = 0.7968 — แต่สูตรนี้สมมติว่าเริ่มจากทุกคนยังไม่ติด</small>
+</div>
+
+<p>นี่คือคำตอบเชิงวิเคราะห์ที่ <strong>รู้ล่วงหน้าโดยไม่ต้องรันอะไรเลย</strong> และเป็นเหตุผลที่เงื่อนไข A มีอยู่ แต่ต้องใช้สูตรให้ตรงกับแบบจำลอง เพราะเราหว่าน E = I = 0.002 ไว้ตั้งแต่วันแรก ดังนั้น S₀/N = 0.996 ไม่ใช่ 1 สูตรที่ถูกคือ <code>s = s₀·exp(−R₀(1−s))</code> ซึ่งให้ <strong>0.798176</strong> ไม่ใช่ 0.7968</p><p>โค้ดรันได้ 0.795010 ที่ 180 วัน ซึ่ง<strong>ยังไม่ใช่ final size</strong> เพราะเหลือ I = 0.38% เมื่อรันต่อค่าลู่เข้าที่ 0.798176 ตั้งแต่วันที่ 365 และที่ 730 วันตรงกับสูตรถึง <strong>3.8 × 10⁻¹³</strong> — คือตรงกันในระดับความแม่นของเลขทศนิยมลอยตัว ไม่ใช่แค่ "ใกล้เคียง" <strong>เครื่องยนต์ถูก</strong> ตรวจซ้ำได้ด้วย <code>scripts/analysis/seir_validation.py</code></p>
+
+<p class="filename">gabm/seir.py:65-69</p>
+<pre><span class="k">def</span> final_size(R0):
+    <span class="c">"""Final attack rate z from z = 1 - exp(-R0 z) for a fully susceptible population."""</span>
+    <span class="k">if</span> R0 &lt;= 1: <span class="k">return</span> 0.0
+    <span class="k">return</span> brentq(<span class="k">lambda</span> z: z - (1 - np.exp(-R0 * z)), 1e-9, 1.0)</pre>
+
+<p>ใช้ <code>brentq</code> หารากแบบ bracketing ซึ่งการันตีลู่เข้า เพราะฟังก์ชันเปลี่ยนเครื่องหมายแน่นอนในช่วง (0,1)</p>
+
+<h3 id="s1-2">1.2 ทำไม final size จึงอธิบายผลเกือบทั้งหมดของโปรเจกต์นี้</h3>
+<p>อนุพันธ์ของสมการข้างบน</p>
+
+<div class="math">
+d<span class="v">z</span>/d<span class="v">R</span>₀ = <span class="v">z</span>(1−<span class="v">z</span>) / [1 − <span class="v">R</span>₀(1−<span class="v">z</span>)]
+<small>ที่ z = 0.47 ได้ 0.88 &nbsp;แต่ที่ z = 0.82 ได้ 0.24</small>
+</div>
+
+<div class="call key">
+  <span class="lbl">ผลที่ตามมา</span>
+  <p>เมื่อ attack rate สูงแล้ว การขยับ R₀ แทบไม่ขยับผลลัพธ์ เส้นโค้งมันแบนไปแล้ว นี่คือเหตุผลเชิงคณิตศาสตร์ว่าทำไมหัวข้อ 5.8 ถึงพบว่าเงื่อนไข C ทนต่อการกวาดพารามิเตอร์ — <strong>ไม่ใช่เพราะโมเดลมั่นคง แต่เพราะมันอยู่ใกล้เพดานอิ่มตัวอยู่แล้ว</strong> ต้องเขียนกำกับไว้อย่างซื่อสัตย์ ไม่งั้นมันจะกลายเป็นการโม้</p>
+</div>
+
+<h3 id="s1-3">1.3 Contact matrices — Prem et al. (2021)</h3>
+<p>เราต้องแปลง “เขาเลือกทำอะไร” เป็น “เขาสัมผัสคนกี่คน” ตัวเลขนี้ไม่ได้เดาเอง มาจากงาน Prem et al. 2021 (PLoS Comput Biol) ที่ประมาณ synthetic contact matrices ให้ 177 ประเทศ แยกตามสถานที่ เราดึงแถวประเทศไทยกับคอลัมน์วัยผู้ใหญ่ 20–64 ออกมา</p>
+
+<div class="tw"><table>
+<thead><tr><th>สถานที่</th><th class="num">การสัมผัส/คน/วัน</th></tr></thead>
+<tbody>
+<tr><td>home</td><td class="num">4.980</td></tr>
+<tr><td>work</td><td class="num">3.857</td></tr>
+<tr><td>school</td><td class="num">0.037</td></tr>
+<tr><td>others</td><td class="num">5.147</td></tr>
+</tbody>
+<caption>data/processed/contact_by_location_TH.csv · ที่มาบันทึกใน data/PROVENANCE.json</caption>
+</table></div>
+
+<h3 id="s1-4">1.4 สามเปเปอร์ที่โครงงานนี้ต่อยอด</h3>
+
+<p><strong>Aoki &amp; Ghaffarzadegan (2026)</strong> — ให้พารามิเตอร์โรคทั้งชุด (β₀, latent, infectious, k, α) ให้แนวคิด “reported cases คือ flow ออกจาก E ไม่ใช่ I” ให้สูตรพฤติกรรมแบบกฎ <code>m = 1/(1+αC)</code> และให้ข้อค้นพบเรื่อง <strong>policy inertia</strong> คือผู้นำ LLM เปลี่ยนนโยบายช้ากว่าที่ควร เราใช้เป็นฐานของเงื่อนไข B และ D</p>
+
+<p><strong>Ferencz et al. (2026) Epi-LLM</strong> — ตั้งคำถามว่า “พฤติกรรมที่โมเดลแสดงออกเป็นของใคร” โมเดลที่ฝึกบนข้อมูลภาษาอังกฤษจำลองคนอเมริกัน หรือคนในบริบทที่เรากำลังศึกษา โครงงานนี้คือการทดสอบสมมติฐานที่ตามมาตรง ๆ ว่า <strong>การจูนภาษาแก้ปัญหานี้ได้หรือไม่</strong></p>
+
+<p><strong>Williams et al. (2023)</strong> — GABM กับพฤติกรรมประชาชนในโรคระบาด เป็น baseline ว่าพฤติกรรม endogenous ควรทำให้การระบาดเบาลง ผลของเราขัดกับข้อนี้ (4 ใน 5 โมเดลทำให้แย่กว่า A) ซึ่งเป็นประเด็นในหัวข้อ 6.3 ของรายงาน</p>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2"><span class="num">2</span>โครงสร้างโฟลเดอร์ ทีละอัน</h2>
+
+<div class="tree">
+Epidemic-Agent-for-Thai/
+├── <span class="d">CLAUDE.md</span>                 <span class="n">← สัญญาว่าอะไรห้ามแตะ (invariants)</span>
+├── <span class="d">config/</span>
+│   ├── base.yaml             <span class="n">← ตัวเลขทุกตัวในโปรเจกต์อยู่ที่นี่ที่เดียว</span>
+│   ├── persona_marginals.csv <span class="n">← อาชีพ 6 กลุ่ม + สัดส่วน + ความสามารถ WFH</span>
+│   └── personas.csv          <span class="n">← agent 40 ตัว สร้างโดย notebook 00</span>
+├── <span class="d">data/</span>
+│   ├── PROVENANCE.json       <span class="n">← URL + citation ของทุก dataset</span>
+│   ├── parameter_sources.csv <span class="n">← ทุกค่ามีสถานะ data | literature | assumption</span>
+│   └── processed/            <span class="n">← contact matrix, mobility, OxCGRT ที่ประมวลแล้ว</span>
+├── <span class="d">gabm/</span>                     <span class="n">← ไลบรารี ~800 บรรทัด คือหัวใจทั้งหมด</span>
+├── <span class="d">notebooks/</span>00–05           <span class="n">← เส้นทาง Colab รันตามลำดับ</span>
+├── <span class="d">scripts/</span>
+│   ├── run_server.py         <span class="n">← ตัวเทียบเท่า notebook สำหรับ SLURM</span>
+│   ├── server/               <span class="n">← ชุดเครื่องมือ SLURM + server.env</span>
+│   └── analysis/             <span class="n">← 7 สคริปต์ที่ผลิตตัวเลขทุกตัวในรายงาน</span>
+├── <span class="d">report/</span>                   <span class="n">← รายงานไทย + สไลด์ + หน้านี้</span>
+├── <span class="d">outputs/</span>                  <span class="n">← gitignored · ผลรันทั้งหมด</span>
+└── <span class="d">.claude/agents/</span>           <span class="n">← subagent 4 ตัวที่ใช้ทำงานกับโปรเจกต์นี้</span>
+</div>
+
+<h3>ทำไมแยกเป็น <code>gabm/</code> แทนที่จะเขียนในโน้ตบุ๊ก</h3>
+<p>ปัญหาคลาสสิกของงาน Colab คือโค้ดอยู่ในเซลล์ แล้วพอย้ายไปเซิร์ฟเวอร์ก็ต้องก็อปวาง สองฝั่งก็เริ่มต่างกันทีละนิด สุดท้ายผลจากสองที่เทียบกันไม่ได้</p>
+<p>วิธีแก้คือ <strong>ตรรกะทั้งหมดอยู่ใน <code>gabm/</code> ส่วนโน้ตบุ๊กกับ <code>run_server.py</code> เป็นแค่ caller</strong> ทั้งสองเรียก <code>run_simulation()</code> ตัวเดียวกันด้วยอาร์กิวเมนต์ชุดเดียวกัน แล้วได้ run id เท่ากัน</p>
+
+<h3>ทำไม <code>data/parameter_sources.csv</code> มีคอลัมน์ <code>status</code></h3>
+<p>ทุกค่าในโปรเจกต์ถูกติดป้ายว่า <code>data</code> (มาจากชุดข้อมูลจริง), <code>literature</code> (มาจากเปเปอร์), หรือ <code>assumption</code> (เราเดาเอง)</p>
+<p>นับดูจะเห็นว่า <strong>ส่วนใหญ่เป็น <code>assumption</code></strong> — <code>employment_rate</code> 0.67, <code>f_errand</code> 0.5, <code>baseline_mix</code>, สัดส่วนอาชีพทั้งหก ตารางนี้มีไว้เพื่อไม่ให้หลอกตัวเอง และเพื่อให้รู้ว่าต้องไปกวาด sensitivity ที่แกนไหน — คุณกวาดเฉพาะแกนที่สถานะเป็น <code>assumption</code> เพราะแกนที่เป็น <code>data</code> ไม่ใช่ทางเลือกของเรา</p>
+
+<div class="call why">
+  <span class="lbl">ทำไมถึงสำคัญ</span>
+  <p>นี่เป็นเหตุผลที่หัวข้อ 5.9 ต้องมี — <code>baseline_mix</code> เป็น assumption ที่ไม่มีแหล่งอ้างอิงเลย แต่ข้อสรุปข้อหนึ่ง (q̄<sub>out</sub> &gt; 1 คือคนออกจากบ้านมากกว่าวันปกติ) แขวนอยู่กับมันโดยตรง</p>
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3"><span class="num">3</span>โค้ดหลักทีละไฟล์ และเหตุผลเบื้องหลัง</h2>
+
+<h3 id="s3-1">3.1 <code>gabm/contacts.py</code> — สะพานระหว่างพฤติกรรมกับระบาดวิทยา</h3>
+<p>นี่คือไฟล์ที่สำคัญที่สุดในโปรเจกต์ มันตอบคำถาม “agent เลือก <code>work_onsite</code> แล้ว β ควรเป็นเท่าไหร่”</p>
+
+<pre>work_per_worker = (loc[<span class="s">"work"</span>] + loc[<span class="s">"school"</span>]) / p[<span class="s">"employment_rate"</span>]
+self.c_out = {
+    <span class="s">"stay_home"</span>:        0.0,
+    <span class="s">"work_onsite"</span>:      work_per_worker + p[<span class="s">"f_work_other"</span>] * loc[<span class="s">"others"</span>],
+    <span class="s">"essential_errand"</span>: p[<span class="s">"f_errand"</span>] * loc[<span class="s">"others"</span>],
+    <span class="s">"visit_family"</span>:     p[<span class="s">"f_visit"</span>] * loc[<span class="s">"others"</span>] + p[<span class="s">"f_visit_home"</span>] * self.home,
+}</pre>
+
+<p><strong>ทำไมต้องหารด้วย <code>employment_rate</code></strong> — ตัวเลข Prem คือค่าเฉลี่ยของ <em>ผู้ใหญ่ทุกคน</em> รวมคนที่ไม่ได้ทำงาน แต่เราอยากรู้ว่า “คนที่ไปทำงานจริงวันนั้น สัมผัสกี่คน” ถ้าในประชากร 67% ทำงาน แล้วค่าเฉลี่ยรวมคือ 3.86 คนที่ไปทำงานจริงต้องสัมผัส 3.86/0.67 = 5.76 ไม่หารจะประเมินการสัมผัสที่ทำงานต่ำไป 33%</p>
+
+<p><strong>ทำไม <code>work_onsite</code> ต้องบวก <code>others</code> ด้วย</strong> — วันที่ไปทำงานคุณไม่ได้เจอแค่เพื่อนร่วมงาน คุณขึ้นรถเมล์ ซื้อข้าวกลางวัน <code>f_work_other = 0.3</code> คือสมมติว่า 30% ของการสัมผัส “อื่น ๆ” เกิดในวันทำงาน</p>
+
+<p><strong>ทำไม <code>visit_family</code> ต้องบวก <code>home</code> เข้าไป</strong> — ไปเยี่ยมญาติคือการเข้าไปในอีกครัวเรือนหนึ่ง <code>f_visit_home = 0.5</code> คือสมมติว่าได้การสัมผัสในบ้านนั้นครึ่งหนึ่งของบ้านตัวเอง นี่คือเหตุผลว่าทำไม <code>visit_family</code> (4.03) ถึงอันตรายกว่า <code>essential_errand</code> (2.57) ทั้งที่ออกไปข้างนอกเหมือนกัน</p>
+
+<h4>หัวใจ: สมการ β_eff</h4>
+<pre>self.base_out = sum(baseline_mix[a] * c_out[a] <span class="k">for</span> a <span class="k">in</span> actions)   <span class="c"># = 4.835</span>
+self.w_home   = self.home / (self.home + self.base_out)            <span class="c"># = 0.507</span>
+
+<span class="k">def</span> q_out(self, shares):
+    <span class="k">return</span> sum(shares[a] * c_out[a] <span class="k">for</span> a <span class="k">in</span> actions) / self.base_out
+
+<span class="k">def</span> beta_eff(self, beta0, q_out, q_policy=1.0):
+    <span class="k">return</span> beta0 * (self.w_home + (1 - self.w_home) * q_out * q_policy)</pre>
+
+<div class="math">
+β<sub>eff</sub> = β₀ · [ <span class="v">w</span><sub>home</sub> + (1 − <span class="v">w</span><sub>home</sub>) · q̄<sub>out</sub> · q<sub>policy</sub> ]
+<small>w_home = 0.507 &nbsp;·&nbsp; 1 − w_home = 0.493</small>
+</div>
+
+<div class="call key">
+  <span class="lbl">การตัดสินใจเชิงแบบจำลองที่สำคัญที่สุด</span>
+  <p><strong>ทำไมต้องแยก w_home ออกมา</strong> — ถ้าไม่มีพจน์นี้ <code>stay_home</code> จะแปลว่า c_out = 0 แปลว่า β = 0 แปลว่า <strong>อยู่บ้านแล้วติดเชื้อไม่ได้</strong> ซึ่งผิดอย่างร้ายแรง ในความจริง 50.7% ของการสัมผัสทั้งหมดในวันปกติเกิดที่บ้าน และการอยู่บ้านไม่ได้ลบมันทิ้ง</p>
+  <p>ผลที่ตามมา: <strong>แม้ทุกคนอยู่บ้านหมด β ก็ลดได้แค่ครึ่งเดียว</strong> (β = 0.2 × 0.507 = 0.101 → R₀ = 1.01) ซึ่งอยู่ขอบ threshold พอดี นี่คือ “เพดาน” ที่อธิบายว่าทำไมแม้ typhoon8b ที่อยู่บ้าน 39% ของเวลาก็ยังหยุดการระบาดไม่ได้</p>
+</div>
+
+<p><strong>ทำไม q̄<sub>out</sub> ต้องหารด้วย base_out</strong> — เพื่อให้ค่าเป็น 1 พอดีในวันปกติ (normalisation) ตอนนี้ค่าตีความได้ทันที: 1.10 คือ “สัมผัสมากกว่าวันปกติ 10%” และนั่นคือสิ่งที่ <code>llama8b</code> ทำ — <strong>ในช่วงโรคระบาด คนออกจากบ้านมากกว่าวันธรรมดา</strong> (เพราะ baseline_mix สมมติว่าวันปกติมี 20% อยู่บ้าน แต่ <code>llama8b</code> อยู่บ้านแค่ 15.6%)</p>
+
+<h4><code>relative_contact</code> — ชั้นที่มักมองข้าม</h4>
+<pre><span class="k">def</span> relative_contact(self, action, q_policy=1.0):
+    <span class="k">return</span> self.w_home + (1 - self.w_home) * q_policy * self.c_out[action] / self.base_out</pre>
+<p>อันนี้คือ <strong>ตัวคูณรายบุคคล</strong> ไม่ใช่รายประชากร ใช้ตอนอัปเดตสุขภาพของ agent แต่ละตัว agent ที่เลือก <code>work_onsite</code> มีโอกาสติดเชื้อสูงกว่า agent ที่อยู่บ้านในวันเดียวกัน — ซึ่งจำเป็น เพราะไม่งั้น agent จะไม่เคยป่วย และ prompt ก็จะไม่เคยมีบรรทัด “คุณมีไข้และไอ” ซึ่งเป็น input สำคัญที่สุดอันหนึ่ง ค่าเฉลี่ยถ่วงน้ำหนักด้วย baseline_mix ของมันเท่ากับ 1 พอดี คือสอดคล้องกับชั้นประชากร</p>
+
+<h3 id="s3-2">3.2 <code>gabm/agents.py</code> — ประชากรสังเคราะห์</h3>
+
+<h4>ทำไม 40 agent ไม่ใช่ 1,000,000</h4>
+<p>ประชากรในแบบจำลองคือหนึ่งล้านคน แต่ agent มี 40 ตัว เพราะ agent คือ <strong>ตัวแทนเชิงพฤติกรรมของกลุ่มประชากร</strong> ไม่ใช่หนึ่งคนหนึ่ง agent แต่ละตัวมีคอลัมน์ <code>weight</code> ติดมา</p>
+<pre><span class="s">"weight"</span>: g[<span class="s">"share"</span>] / k,     <span class="c"># สัดส่วนกลุ่ม หารจำนวน agent ที่ได้ในกลุ่มนั้น</span></pre>
+<p>เหตุผลเชิงปฏิบัติ: 40 prompt = <strong>หนึ่ง batch พอดี</strong> (<code>batch_size: 40</code>) คือหนึ่ง forward pass ต่อหนึ่งวันจำลอง ทำให้ 180 วันใช้ 180 รอบ ไม่ใช่ 7,200 รอบ นี่คือเหตุผลว่าทำไมรัน 180 วันได้ใน 7–11 นาที ถ้าใช้ 400 agent ต้นทุนจะคูณสิบและโปรเจกต์นี้จะรันไม่เสร็จบน GPU ที่มี</p>
+
+<h4><code>_allocate</code> — largest remainder</h4>
+<pre>raw = np.array(shares) * n
+counts = np.maximum(np.floor(raw).astype(int), 1)
+<span class="k">while</span> counts.sum() &lt; n: counts[np.argmax(raw - counts)] += 1
+<span class="k">while</span> counts.sum() &gt; n: counts[np.argmax(counts - raw)] -= 1</pre>
+<p>แบ่ง 40 agent ให้ 6 กลุ่มอาชีพตามสัดส่วน ปัญหาคือ 0.28 × 40 = 11.2 ไม่ใช่จำนวนเต็ม วิธี largest-remainder (วิธีเดียวกับการจัดสรรที่นั่ง ส.ส. แบบบัญชีรายชื่อ) ให้ผลที่ใกล้สัดส่วนจริงที่สุด และ <code>np.maximum(..., 1)</code> การันตีว่าทุกกลุ่มมีอย่างน้อยหนึ่งตัว — ไม่งั้นกลุ่มเล็ก (<code>public</code> 8%) อาจหายไปเลยและเราจะสูญเสียความหลากหลายที่เป็นจุดประสงค์ของ persona</p>
+
+<h4><code>wfh_u</code> — ลูกเล่นที่ทำให้ sensitivity สะอาด</h4>
+<pre>u = rng.random()
+<span class="s">"wfh_u"</span>: u,   <span class="c"># kept so WFH sensitivity can rescale without redrawing others</span>
+<span class="s">"can_wfh"</span>: bool(u &lt; min(1.0, g[<span class="s">"p_can_wfh"</span>] * wfh_scale)),</pre>
+<p>เราเก็บ <strong>เลขสุ่มดิบ</strong> ไว้ในแถว ไม่ใช่แค่ผลลัพธ์ boolean ทำให้ตอนกวาด <code>wfh_scale</code> ได้ persona ชุดเดิมเป๊ะทุกคอลัมน์ เปลี่ยนแค่ <code>can_wfh</code> ถ้าสุ่มใหม่ อายุ ขนาดครัวเรือน ความเสี่ยง ก็จะเปลี่ยนตามหมด แล้วความต่างที่เห็นจะแยกไม่ออกว่ามาจาก WFH หรือจากการสุ่มใหม่</p>
+
+<div class="call key">
+  <span class="lbl">ผลที่ดีที่สุดในรายงานทั้งฉบับ</span>
+  <p>ปรากฏว่าที่ <code>wfh_scale</code> 0.5 เทียบ 1.0 ด้วย persona_seed นี้ มีแค่ <strong>agent ตัวที่ 13 ตัวเดียว</strong> ที่ข้าม threshold กลายเป็นการทดลอง <strong>แทรกแซงคุณลักษณะเดียวใน agent เดียว</strong> โดยบังเอิญ — prompt ของ agent 13 ต่างกันแค่บรรทัดเดียว คือ <code>- Can work from home: yes/no</code> ที่เหลือเหมือนกันทุกตัวอักษร ได้การวัดตรง ๆ ว่า <strong>โมเดลอ่าน persona ของตัวเองหรือเปล่า</strong></p>
+</div>
+
+<div class="tw"><table>
+<thead><tr><th>โมเดล</th><th class="num">วันที่ agent 13 เปลี่ยนคำตอบ (จาก 180)</th></tr></thead>
+<tbody>
+<tr><td>typhoon8b</td><td class="num">111</td></tr>
+<tr><td>llama8b</td><td class="num">61</td></tr>
+<tr><td>seallm7b</td><td class="num">25</td></tr>
+<tr><td>qwen7b</td><td class="num">4</td></tr>
+<tr><td><strong>openthaigpt7b</strong></td><td class="num"><strong>0</strong></td></tr>
+</tbody></table></div>
+
+<p><code>openthaigpt7b</code> ไม่เปลี่ยนเลยสักครั้ง และเส้นทางการระบาดเหมือนกันถึงทศนิยมหกตำแหน่ง (0.857937) <strong>โมเดลที่จูนไทยในตระกูล Qwen ไม่ได้ใช้ข้อมูล persona ของตัวเองในการตัดสินใจ</strong> ซึ่งอธิบายว่าทำไมมันถึงได้ attack rate สูงที่สุด (0.858) — มันตอบแบบเดียวกันไม่ว่าใครถาม</p>
+
+<h4><code>AgentHealth</code> — ชั้นสุขภาพรายบุคคล</h4>
+<pre>p_inf = 1 - np.exp(-beta0 * I_frac * np.asarray(rel_contacts))
+new_status[s &amp; (u &lt; p_inf)] = <span class="s">"E"</span></pre>
+<p>นี่คือ exponential survival — ความน่าจะเป็นที่จะ <strong>ไม่</strong> ติดใน 1 วันคือ e<sup>−hazard</sup> โดย hazard ∝ β₀ × สัดส่วนผู้ติดเชื้อในประชากร × การสัมผัสสัมพัทธ์ของ agent คนนั้น</p>
+
+<div class="call trap">
+  <span class="lbl">ควรรู้ไว้ตอบกรรมการ</span>
+  <p>ชั้นนี้เป็น <strong>การคู่ควบทางเดียว</strong> ประชากร SEIR ขับสุขภาพ agent แต่สุขภาพ agent ไม่ย้อนกลับไปแตะ compartment มันมีผลต่อการระบาดเฉพาะทางอ้อม คือผ่าน prompt → การตัดสินใจ → q̄<sub>out</sub> → β เท่านั้น</p>
+</div>
+
+<h4>กับดักการนับที่เกือบทำให้รายงานผิด</h4>
+<pre><span class="k">def</span> health_text(self, i):
+    <span class="k">if</span> self.symptomatic[i]:   <span class="k">return</span> <span class="s">f"You have had fever and cough for {...} day(s)."</span>
+    <span class="k">if</span> self.status[i] == <span class="s">"R"</span>: <span class="k">return</span> <span class="s">"You had this illness earlier and have recovered."</span>
+    <span class="k">return</span> <span class="s">"You feel healthy and have no symptoms."</span></pre>
+<p><strong>ฟิลด์นี้มีสามสถานะ ไม่ใช่สอง</strong> ตอนตรวจย้อนกลับหัวข้อ 5.6 ถ้าแบ่งเป็นสองกลุ่ม (มีอาการ เทียบ ไม่มีอาการ) จะได้ค่าติดลบสามโมเดล ขัดกับรายงาน ความจริงคือกลุ่ม “ไม่มีอาการ” ต้องรวม <code>recovered</code> เข้าไปด้วย เมื่อแก้แล้วตัวเลขตรงเป๊ะ (0.158/0.018/0.069/0.201/0.395 → 0.269/0.093/0.395/0.249/0.476)</p>
+<p>ถ้าแยก <code>recovered</code> ออก <strong>เครื่องหมายจะกลับสำหรับสามโมเดล</strong> จึงบันทึกไว้ทั้งใน <code>scripts/analysis/README.md</code> และในหมายเหตุใต้ตาราง 5.6</p>
+
+<h3 id="s3-3">3.3 <code>gabm/llm.py</code> — prompt และการตรวจคำตอบ</h3>
+
+<p class="filename">prompt ของผู้อยู่อาศัย (ตัวอย่างจริง)</p>
+<pre>You are simulating the daily choice of one resident in a synthetic epidemic
+scenario set in a province in Thailand. ...
+
+Resident profile:
+- Age group: 40-49
+- Main activity: farmer or fisher (own account)
+- Can work from home: no
+- Income loss if you do not go out to work: high (daily or self-employed income, ...)
+- Household size: 3 people
+- Lives with an elderly or chronically ill person: no
+- How serious you think this disease is: medium
+- Trust in official health information: high
+
+Today is day 42 of the simulation.
+- Your health: You feel healthy and have no symptoms.
+- Newly reported cases ...: 312.4 per 100,000 (7-day average 287.1; trend: rising)
+- Current government measures: None. Normal activities are allowed.
+
+Choose exactly ONE main activity for today:
+- stay_home: stay home or work from home today
+...
+Reply with JSON only, no other text:
+{"action": "&lt;one of: ...&gt;", "reason": "&lt;at most 15 words&gt;"}</pre>
+
+<div class="call why">
+  <span class="lbl">ทำไม prompt เป็นภาษาอังกฤษ ทั้งที่ศึกษาบริบทไทย</span>
+  <p>เป็นการตัดสินใจที่ถกได้ และเขียนไว้ในข้อจำกัด เหตุผลคือถ้า prompt เป็นภาษาไทย โมเดลที่จูนไทยจะได้เปรียบทันทีจาก <strong>ความสามารถด้านภาษา</strong> ไม่ใช่จาก <strong>ความเข้าใจบริบท</strong> ซึ่งปนสองอย่างที่เราพยายามแยก การใช้อังกฤษทำให้ทุกโมเดลอ่าน prompt ได้เท่ากัน แต่ก็แลกมาด้วยการที่เราไม่ได้ทดสอบการจูนไทยในโหมดที่มันถูกออกแบบมา</p>
+</div>
+
+<p><strong>ทำไมต้องบอก <code>reason</code> ไม่เกิน 15 คำ</strong> — เพื่อให้วิเคราะห์เชิงเนื้อหาได้ (หัวข้อ 5.4) และเพื่อจำกัด token การ generate 64 token ต่อ agent ต่อวันคือสิ่งที่ทำให้ต้นทุนอยู่ในงบ</p>
+
+<p><strong>ทำไมถาม “เลือกหนึ่งกิจกรรม” ไม่ใช่ “เลือกระดับการระมัดระวัง 0–10”</strong> — เพราะการกระทำต้องแปลงเป็นจำนวนการสัมผัสที่มีที่มาจากข้อมูลจริงได้ สเกล 0–10 จะต้องเดาว่า 7 แปลว่าสัมผัสกี่คน ส่วนสี่ตัวเลือกนี้ map ตรงเข้า contact matrix</p>
+
+<h4>การตรวจคำตอบ — นโยบายสามชั้น</h4>
+<pre><span class="k">def</span> parse_choice(text, allowed, key=<span class="s">"action"</span>):
+    m = JSON_RE.search(text <span class="k">or</span> <span class="s">""</span>)              <span class="c"># 1. หา JSON ในข้อความ</span>
+    <span class="k">if not</span> m: <span class="k">return</span> None, None, <span class="s">"no_json"</span>
+    <span class="k">try</span>: obj = json.loads(m.group(0))
+    <span class="k">except</span> json.JSONDecodeError: <span class="k">return</span> None, None, <span class="s">"bad_json"</span>
+    choice = str(obj.get(key, <span class="s">""</span>)).strip().lower()
+    <span class="k">if</span> choice <span class="k">not in</span> allowed:                   <span class="c"># 2. ต้องอยู่ในรายการที่อนุญาต</span>
+        <span class="k">return</span> None, obj.get(<span class="s">"reason"</span>), <span class="s">f"not_allowed:{choice[:30]}"</span>
+    <span class="k">return</span> choice, obj.get(<span class="s">"reason"</span>), None</pre>
+
+<p><code>JSON_RE = re.compile(r"\{.*?\}", re.S)</code> — non-greedy หาวงเล็บปีกกาคู่แรก เพราะโมเดลมักพ่น <code>Sure, here's my answer: {...}</code> ออกมา</p>
+
+<p>แล้ว <code>decide_batch</code> ทำสามชั้น</p>
+<ol>
+<li>generate → parse → ถ้าถูกต้อง จบ</li>
+<li>ถ้าผิด <strong>retry หนึ่งครั้ง</strong> พร้อมต่อท้ายว่า “Your previous reply was not valid…” และเปลี่ยน seed (<code>seed + 100003</code>)</li>
+<li>ถ้ายังผิดอีก <strong>fallback ไปใช้การกระทำของเมื่อวาน</strong> (หรือค่า default ในวันที่ 0)</li>
+</ol>
+
+<div class="call why">
+  <span class="lbl">ทำไม fallback ต้องเป็น “ของเมื่อวาน” ไม่ใช่ stay_home</span>
+  <p>ถ้า fallback เป็น <code>stay_home</code> เสมอ โมเดลที่ตอบผิดบ่อยจะดู “ระมัดระวังกว่า” โดยอัตโนมัติ ซึ่งเป็น bias ที่ร้ายแรง การใช้ของเมื่อวานเป็นกลางที่สุด — มันคือ “ไม่มีข้อมูลใหม่ ก็ทำเหมือนเดิม”</p>
+</div>
+
+<p><strong>ทำไม fallback ต้องไม่เงียบ</strong> — ทุก record เก็บ <code>raw</code>, <code>raw_retry</code>, <code>error</code>, <code>valid</code>, <code>retried</code>, <code>fallback</code> ครบ เพราะ <strong>ความน่าเชื่อถือของชั้น LLM เป็นผลการทดลองเอง</strong> ไม่ใช่รายละเอียดวิศวกรรม จากการตรวจ 410,400 การตัดสินใจ: <strong>fallback 0 ครั้ง</strong> และ retry น้อยมาก (seallm7b มากสุดที่ 60 ครั้งในเงื่อนไข C) นั่นแปลว่าผลที่เห็นเป็นการตัดสินใจของโมเดลจริง ไม่ใช่ของกลไก fallback — ถ้าตัวเลขนี้สูง ข้อสรุปทั้งหมดจะใช้ไม่ได้</p>
+
+<h4>เรื่อง seed</h4>
+<pre>decide_batch(..., seed=seed * 100003 + day * 1009)      <span class="c"># ผู้อยู่อาศัย</span>
+decide_batch(..., seed=seed * 7919 + day, key=<span class="s">"level"</span>)  <span class="c"># ผู้นำ</span></pre>
+<p>จำนวนเฉพาะ (100003, 1009, 7919) ใช้เพื่อไม่ให้ seed ของคนละ (seed, day) ชนกัน — ถ้าใช้ <code>seed + day</code> เฉย ๆ แล้ว (seed=1, day=2) จะได้ seed เดียวกับ (seed=2, day=1) ทำให้สามซีดไม่อิสระจริง</p>
+
+<h4><code>MockBackend</code> — ทำไมต้องมี</h4>
+<p>มันปลอมเป็น LLM บน CPU <strong>และจงใจพ่นคำตอบเสีย 5%</strong> เพื่อให้ทดสอบเส้นทาง retry/fallback ได้โดยไม่ต้องใช้ GPU และรันที่ไหนก็ได้ รันที่ backend นี้ถูกตัดออกจากการวิเคราะห์อัตโนมัติ</p>
+
+<h3 id="s3-4">3.4 <code>gabm/policy.py</code> — เงื่อนไข B และ D</h3>
+<pre><span class="k">def</span> rule_based_m(cases7, alpha):
+    <span class="k">return</span> 1.0 / (1.0 + alpha * cases7)</pre>
+<p>นี่คือสูตรของ Aoki &amp; Ghaffarzadegan — เมื่อเคสเยอะคนก็ลดกิจกรรม แบบ <strong>ไม่มี LLM เลย</strong> ใช้เป็น q̄<sub>out</sub> ของเงื่อนไข B ตรง ๆ</p>
+
+<div class="call key">
+  <span class="lbl">ทำไม B สำคัญมาก</span>
+  <p>มันคือเกณฑ์ที่ตอบคำถาม “LLM ให้อะไรมากกว่ากฎบรรทัดเดียว” ผลคือ B ได้ attack rate <strong>0.469</strong> ขณะที่ C ได้ 0.64–0.86 คือ <strong>กฎบรรทัดเดียวทำได้ดีกว่า LLM ทุกตัว</strong> ถ้าไม่มี B ในแผง เราจะอวด “LLM ทำให้การระบาดเบาลงกว่า A” ไม่ได้ และจะไม่รู้ด้วยซ้ำว่ามันไม่เบาลง</p>
+</div>
+
+<pre><span class="k">def</span> q_policy(level, policy_cfg):
+    <span class="k">return</span> 1.0 - policy_cfg[<span class="s">"k"</span>] * policy_cfg[<span class="s">"levels"</span>][level][<span class="s">"d"</span>]</pre>
+
+<p>ระดับนโยบายส่งผลสามทาง ไม่ใช่ทางเดียว</p>
+<ol>
+<li><strong>q_policy</strong> ลดการแพร่ต่อการสัมผัสหนึ่งครั้ง (หน้ากาก ระยะห่าง) — <code>strict</code>: 1 − 0.8×0.8 = 0.36</li>
+<li><strong>ข้อความ</strong> ที่ผู้อยู่อาศัยเห็นใน prompt</li>
+<li><strong>การแบน</strong> — <code>strict</code> แบน <code>visit_family</code> ออกจากรายการตัวเลือกเลย</li>
+</ol>
+
+<p><strong>ทำไมต้องแยกสามทาง</strong> — เพราะนโยบายจริงทำงานหลายทางพร้อมกัน บังคับใส่หน้ากาก (ลดการแพร่ต่อการสัมผัส) ต่างจากปิดสถานที่ (ลบตัวเลือกทิ้ง) ต่างจากการรณรงค์ (เปลี่ยนสิ่งที่คนรับรู้) และที่สำคัญคือ <strong>ผู้นำไม่เคยแตะ state ของ SEIR โดยตรง</strong> มันแตะได้แค่ผ่านสามช่องนี้ ซึ่งทำให้ causal chain ตรวจสอบได้</p>
+
+<p class="filename">prompt ของผู้นำ</p>
+<pre>You are the provincial governor ... Each week you set the level of measures
+for the next 7 days. You must balance health and the livelihoods of residents,
+many of whom lose income when they cannot work.
+
+Weekly report (day 84):
+- 7-day average of newly reported cases: 412.7 per 100,000 per day
+- Trend compared with the previous week: rising
+- Share of residents who went out to work on-site last week: 68%
+- Current level: open</pre>
+
+<p><strong>ทำไมต้องบอก <code>work_share</code></strong> — ผู้นำจริงเห็นข้อมูลเศรษฐกิจ ไม่ใช่แค่ตัวเลขผู้ป่วย และนี่คือกลไกที่ควรทำให้เกิด trade-off</p>
+
+<div class="call trap">
+  <span class="lbl">ผลที่ได้</span>
+  <p>ผู้นำ LLM เลือก <code>strict</code> แค่ <strong>5 ครั้งจาก 702 สัปดาห์-การตัดสินใจ</strong> และทั้งห้าครั้งกระจุกอยู่ในสองรัน คือ <code>llama8b</code> seed 2 (4 ครั้ง สัปดาห์ที่ 12–15) กับ seed 6 (1 ครั้ง) <strong>สองรันนั้นคือสองรันที่ผู้นำเห็นยอดเคสต่ำที่สุดในหกซีดของ <code>llama8b</code></strong> คือ 528 และ 602 เทียบกับ 625, 644, 645 และ 653 ถ้าการยกระดับขึ้นกับความรุนแรง อีกสี่ซีดต้องยกก่อน แต่ไม่ยกเลยสักรัน ส่วน <code>openthaigpt7b</code> เห็นยอดเคสสูงถึง 986 ต่อแสนต่อวัน ซึ่งเกือบสองเท่าของจุดที่ <code>llama8b</code> ยกระดับ แล้วก็ยังไม่ขยับ</p>
+  <p>นี่คือ <strong>policy inertia</strong> ของ Aoki &amp; Ghaffarzadegan ที่ปรากฏซ้ำในบริบทไทย แต่ในรูปแบบที่รุนแรงกว่า — ไม่ใช่ “ช้า” แต่ “แทบไม่เคยยกระดับเลย” และที่สำคัญคือ <code>reason</code> ที่มันเขียนมา <strong>รายงานสถานการณ์ถูกต้อง</strong> (“cases rising sharply”) แต่ยังเลือก <code>open</code> คือมันอ่านข้อมูลเป็น แต่ไม่แปลงเป็นการกระทำ</p>
+</div>
+
+<h3 id="s3-5">3.5 <code>gabm/sim.py</code> — ลูปวัน</h3>
+
+<pre><span class="k">for</span> day <span class="k">in</span> range(day0, days):
+    report = case_report(hist, N)                      <span class="c"># 1. ผู้อยู่อาศัยเห็นรายงานเมื่อวาน</span>
+    <span class="k">if</span> condition == <span class="s">"D"</span> <span class="k">and</span> day % 7 == 0:              <span class="c"># 2. ผู้นำตัดสินใจ (ทุก 7 วัน)</span>
+        level = ...
+    <span class="k">if</span> uses_llm:                                       <span class="c"># 3. ผู้อยู่อาศัย 40 คนตัดสินใจพร้อมกัน</span>
+        prompts = [build_resident_prompt(...) <span class="k">for</span> i <span class="k">in</span> ...]
+        acts = [r[<span class="s">"choice"</span>] <span class="k">for</span> r <span class="k">in</span> recs]
+        shares = cm.shares(acts, weights)              <span class="c"># 4. รวมเป็นสัดส่วนถ่วงน้ำหนัก</span>
+        q_out = cm.q_out(shares)
+    beta = cm.beta_eff(beta0, q_out, qp)               <span class="c"># 5. ได้ beta ของวันนี้</span>
+    I_frac = state[<span class="s">"I"</span>] / N
+    new = seir.step(state, beta, sigma, gamma, N)      <span class="c"># 6. เดิน SEIR หนึ่งวัน</span>
+    health.step(rng, beta0, I_frac, [...], sigma, gamma)  <span class="c"># 7. อัปเดตสุขภาพ agent</span>
+    store.append_daily(row); store.append_jsonl(...)   <span class="c"># 8. log</span>
+    hist.append(new[<span class="s">"new_reported"</span>])
+    store.save_json(<span class="s">"state.json"</span>, {...})               <span class="c"># 9. checkpoint</span></pre>
+
+<p>ลำดับนี้สำคัญ และมีรายละเอียดที่จงใจสามจุด</p>
+
+<div class="call why">
+  <span class="lbl">จุดที่หนึ่ง — ไม่มีข้อมูลรั่ว</span>
+  <p><code>hist.append()</code> อยู่ <strong>หลัง</strong> <code>seir.step()</code> แปลว่าตอน agent ตัดสินใจในวันที่ t มันเห็นได้แค่ยอดรายงานถึงวันที่ t−1 ถ้าสลับสองบรรทัดนี้ agent จะเห็นผลของการตัดสินใจตัวเองก่อนตัดสินใจ ซึ่งเป็น causality violation ที่หาเจอยากมากถ้าไม่ตั้งใจ</p>
+</div>
+
+<p><strong>จุดที่สอง — <code>I_frac</code> อ่านก่อน step</strong> ใช้ <code>state["I"]</code> ไม่ใช่ <code>new["I"]</code> คือ agent ติดเชื้อจากสถานะ ณ ต้นวัน ไม่ใช่ปลายวัน</p>
+
+<p><strong>จุดที่สาม — <code>prev</code> คือ fallback ของพรุ่งนี้</strong> <code>fallbacks = [a if a in allowed else "stay_home" for a in prev]</code> ถ้าเมื่อวานเลือก <code>visit_family</code> แต่วันนี้ <code>strict</code> แบนมันแล้ว fallback ต้องเปลี่ยนเป็น <code>stay_home</code> ไม่งั้นจะได้การกระทำที่ถูกแบนหลุดเข้ามา</p>
+
+<h4><code>seir.step</code> — ทำไมใช้ <code>solve_ivp</code> ไม่ใช่ Euler</h4>
+<pre>sol = solve_ivp(_rhs, (0.0, dt), y0, args=(beta, sigma, gamma, N),
+                method=<span class="s">"RK45"</span>, rtol=1e-8, atol=1e-6)</pre>
+<p>β คงที่ภายในวัน แต่ภายในวันนั้นสมการยังเป็น ODE ที่ไม่เชิงเส้น (มีพจน์ SI/N) ถ้าใช้ Euler step 1 วันจะได้ error ที่สะสมเป็นร้อยแปดสิบวัน และยิ่งแย่ตอนใกล้พีคที่ความชันสูง RK45 ที่ rtol 1e-8 ทำให้ <strong>ความคลาดเคลื่อนเชิงตัวเลขเล็กกว่าความต่างที่เรากำลังวัดหลายอันดับ</strong> ซึ่งจำเป็น เพราะเรากำลังเถียงเรื่องความต่างระดับ 0.025 ใน sensitivity</p>
+
+<pre><span class="k">def</span> check_conservation(state, N, tol=1e-6):
+    <span class="k">assert</span> abs(total - N) &lt;= tol * N
+    <span class="k">assert</span> min(...) &gt;= -tol * N</pre>
+<p>ตรวจทุกวันว่า S+E+I+R = N และไม่มีถังติดลบ assert นี้ไม่เคยยิงเลยตลอดโปรเจกต์ แต่ถ้ามันยิงเมื่อไหร่ แปลว่ามีอะไรผิดร้ายแรงและควรหยุดทันทีแทนที่จะรันต่อไปเงียบ ๆ 180 วัน</p>
+
+<h4>สองตัวนับสะสม</h4>
+<pre><span class="k">return</span> [-inf, inf - prog, prog - rec, rec, inf, prog]
+<span class="c">#                                          ^^^  ^^^^</span>
+<span class="c">#                                      cum_inf  cum_rep</span></pre>
+<p><code>cum_inf</code> คือ <strong>การติดเชื้อจริง</strong> (flow S→E) ส่วน <code>cum_rep</code> คือ <strong>เคสที่รายงาน</strong> (flow E→I) ตาม Aoki &amp; Ghaffarzadegan</p>
+<p><strong>ทำไมแยก</strong> — เพราะสิ่งที่ agent เห็นต้องเป็นสิ่งที่ระบบสาธารณสุขเห็น ซึ่งคือคนที่เริ่มแสดงอาการและมาตรวจ ไม่ใช่คนที่เพิ่งรับเชื้อเมื่อวาน ความหน่วง 4 วัน (ระยะฟักตัว) นี้มีความหมายเชิงพฤติกรรม — <strong>agent ตอบสนองต่ออดีตเสมอ</strong> ซึ่งเป็นแหล่งหนึ่งของ inertia ที่เราเห็น</p>
+
+<h3 id="s3-6">3.6 <code>gabm/io.py</code> — run id คือสัญญา</h3>
+<pre><span class="k">def</span> config_hash(obj):
+    <span class="k">return</span> hashlib.sha1(json.dumps(obj, sort_keys=<span class="k">True</span>, default=str).encode()).hexdigest()[:8]
+
+<span class="k">def</span> make_run_id(condition, model_key, seed, settings):
+    <span class="k">return</span> <span class="s">f"{condition}_{model_key or 'none'}_s{seed}_{config_hash(settings)}"</span></pre>
+
+<p><strong>คอนฟิกทั้งก้อนถูกแฮช</strong> ได้ชื่อโฟลเดอร์แบบ <code>C_typhoon8b_s1_74fdbb94</code> ผลที่ได้สี่อย่าง</p>
+<ol>
+<li><strong>เปลี่ยนพารามิเตอร์อะไรก็ตาม = run id ใหม่</strong> ผลเก่าไม่ถูกเขียนทับ ไม่มีทางเทียบคนละคอนฟิกกันโดยไม่รู้ตัว</li>
+<li><strong>Colab กับเซิร์ฟเวอร์ได้ id เดียวกัน</strong> ถ้าเรียกเหมือนกัน → งานที่ทำบน Colab แล้วถูกข้ามบนเซิร์ฟเวอร์อัตโนมัติ</li>
+<li><strong><code>sort_keys=True</code> จำเป็น</strong> เพราะ dict ใน Python รักษาลำดับการใส่ ถ้าไม่เรียง คอนฟิกเดียวกันที่ประกอบคนละลำดับจะได้แฮชคนละตัว</li>
+<li><strong><code>tag</code> อยู่ในแฮชด้วย</strong> → smoke test กับ sensitivity sweep ไม่ทับงานหลัก</li>
+</ol>
+
+<div class="call key">
+  <span class="lbl">ผลข้างเคียงที่กลายเป็นของดี</span>
+  <p>รัน <code>sens_wfh=1.0</code> มีคอนฟิกเหมือนรันหลักทุกอย่าง <strong>ยกเว้น tag</strong> ดังนั้นมันไม่ถูกข้าม มันรันใหม่ และได้ attack rate ตรงกับรันหลักถึงทศนิยมสี่ตำแหน่งทั้งห้าโมเดล <strong>กลายเป็นการตรวจ determinism ฟรี</strong> (หัวข้อ 5.8.4)</p>
+</div>
+
+<h4>checkpoint ทุกวัน</h4>
+<pre>store.save_json(<span class="s">"state.json"</span>, {<span class="s">"day"</span>: day+1, <span class="s">"seir"</span>: state, <span class="s">"reported_hist"</span>: hist,
+                               <span class="s">"level"</span>: level, <span class="s">"prev_actions"</span>: prev,
+                               <span class="s">"health"</span>: health.to_dict(), <span class="s">"rng"</span>: rng.bit_generator.state,
+                               <span class="s">"elapsed"</span>: elapsed_total})</pre>
+<p><strong>รวม state ของ RNG ด้วย</strong> นี่คือจุดที่คนมักพลาด ถ้า resume แล้วสร้าง RNG ใหม่ การสุ่มจะไม่ต่อเนื่องกับรันเดิม แปลว่ารันที่ timeout แล้วกลับมาทำต่อ จะไม่เท่ากับรันที่ทำรวดเดียว — reproducibility พัง</p>
+
+<pre><span class="k">def</span> save_json(self, name, obj):
+    tmp = self.path(name + <span class="s">".tmp"</span>); ...; os.replace(tmp, self.path(name))</pre>
+<p>เขียนลงไฟล์ชั่วคราวแล้ว <code>os.replace</code> ซึ่ง <strong>atomic บน POSIX</strong> ถ้าไฟฟ้าดับหรือ SLURM kill กลางคัน จะไม่ได้ <code>state.json</code> ที่เขียนไปครึ่งเดียว (ซึ่ง parse ไม่ได้และจะทำให้ resume ล้มเหลวทั้งรัน)</p>
+
+<h4><code>runtime.json</code> คือธงว่า “เสร็จแล้ว”</h4>
+<pre><span class="k">def</span> is_complete(self):
+    <span class="k">return</span> self.path(<span class="s">"runtime.json"</span>).exists()</pre>
+<p>เขียนเฉพาะตอนลูปจบครบ ดังนั้น <strong>โฟลเดอร์ที่ไม่มี <code>runtime.json</code> คือรันที่ถูกตัดกลางคัน</strong> และ <code>load_runs</code> ข้ามมันทิ้ง นี่คือการป้องกันไม่ให้รันที่ timeout ที่วันที่ 93 หลุดเข้าไปในการวิเคราะห์ปนกับรัน 180 วัน</p>
+
+<h3 id="s3-7">3.7 <code>gabm/analysis.py</code> — การ dedupe</h3>
+<pre>DEDUPE_KEYS = [<span class="s">"condition"</span>, <span class="s">"model_key"</span>, <span class="s">"seed"</span>, <span class="s">"tag"</span>, <span class="s">"days"</span>, <span class="s">"backend"</span>]
+df = (df.sort_values(<span class="s">"finished_at"</span>)
+        .drop_duplicates(DEDUPE_KEYS, keep=<span class="s">"last"</span>))</pre>
+<p>run id เป็นแฮชของคอนฟิก แต่คอนฟิกอาจเปลี่ยนในทางที่ <strong>ไม่กระทบผล</strong> (เช่นเพิ่มโมเดลใหม่ใน registry) แล้วได้ id ใหม่ทั้งที่เป็นการทดลองเดียวกัน dedupe จึงยุบตาม (condition, model, seed, tag, days, backend) และเก็บอันที่เสร็จล่าสุด</p>
+<p><strong>ไม่มีอะไรถูกลบบนดิสก์</strong> — แค่การวิเคราะห์เลือกอันล่าสุด ซึ่งเป็นเหตุผลว่าทำไม <code>outputs/runs/</code> มี 110 โฟลเดอร์ แต่การวิเคราะห์ headline ใช้แค่ 57 รัน (ที่เหลือคือ tagged runs: smoke, order, sens, baseline, 365 วัน และรันเก่าที่ถูก supersede)</p>
+
+<div class="call trap">
+  <span class="lbl">invariant ข้อ 4 ใน CLAUDE.md</span>
+  <p><code>outputs/metrics.csv</code> คือ dump ดิบของ <em>ทุก</em> รันรวม tagged — อย่าเอาจำนวนแถวไปอ้างว่าเป็นจำนวนการทดลอง และการวิเคราะห์หลักต้องกรอง <code>tag == ""</code> เสมอ</p>
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4"><span class="num">4</span>การออกแบบเงื่อนไข A–D ว่าทำไมต้องมีครบสี่</h2>
+
+<div class="tw"><table>
+<thead><tr><th></th><th>q̄<sub>out</sub> มาจาก</th><th>ตอบคำถามอะไร</th><th class="num">ผลจริง (180 วัน)</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong></td><td>= 1 คงที่</td><td>เครื่องยนต์ SEIR ถูกไหม</td><td class="num">0.795 ที่ 180 วัน <span style="color:var(--ink-3)">(ลู่เข้า 0.798176 = สูตร ✓)</span></td></tr>
+<tr><td><strong>B</strong></td><td>m = 1/(1+αC)</td><td>กฎบรรทัดเดียวทำได้แค่ไหน</td><td class="num"><strong>0.469</strong></td></tr>
+<tr><td><strong>C</strong></td><td>สัดส่วนการกระทำของ LLM 40 ตัว</td><td>ผลของการจูนไทย (RQ1)</td><td class="num">0.640–0.858</td></tr>
+<tr><td><strong>D</strong></td><td>C + ผู้นำรายสัปดาห์</td><td>ผู้นำ LLM เพิ่มอะไร (RQ3)</td><td class="num">0.268–0.723</td></tr>
+</tbody></table></div>
+
+<p>แต่ละเงื่อนไขเพิ่ม <strong>ชั้นเดียว</strong> จากเงื่อนไขก่อนหน้า ซึ่งเป็นสิ่งที่ทำให้ตีความได้</p>
+<ul>
+<li><strong>A→B</strong> เพิ่มการตอบสนองเชิงพฤติกรรม แต่ยังไม่มี LLM</li>
+<li><strong>B→C</strong> แทนกฎด้วย LLM (ชั้นเดียวกัน คนละกลไก) → เทียบได้ตรง ๆ ว่า LLM ให้อะไรมากกว่ากฎ คำตอบ: น้อยกว่า</li>
+<li><strong>C→D</strong> เพิ่มผู้นำ ทุกอย่างอื่นเหมือนเดิม → ส่วนต่าง C−D คือผลของผู้นำล้วน</li>
+</ul>
+
+<h3 id="s4-2">4.1 ผลหลัก และทำไมมันน่าสนใจกว่าที่คาด</h3>
+
+<h4>เงื่อนไข C (ผู้อยู่อาศัย LLM, เฉลี่ย 6 ซีด)</h4>
+<div class="tw"><table>
+<thead><tr><th></th><th class="num">ไม่จูน</th><th class="num">จูนไทย</th><th class="num">ผลของการจูน</th></tr></thead>
+<tbody>
+<tr><td>Llama</td><td class="num">0.8195</td><td class="num">0.6381</td><td class="num neg">−0.1814</td></tr>
+<tr><td>Qwen</td><td class="num">0.8325</td><td class="num">0.8591</td><td class="num pos">+0.0266</td></tr>
+</tbody></table></div>
+
+<p class="small">ทั้งสี่ช่องให้ p = 0.0022 จาก exact permutation test ที่ 6 ซีด ซึ่งเป็นพื้นของการออกแบบ อ่านคู่กับขนาดของผลเสมอ</p>
+
+<h4>เงื่อนไข D (เพิ่มผู้นำ, เฉลี่ย 6 ซีด)</h4>
+<div class="tw"><table>
+<thead><tr><th></th><th class="num">ไม่จูน</th><th class="num">จูนไทย</th><th class="num">ผลของการจูน</th></tr></thead>
+<tbody>
+<tr><td>Llama</td><td class="num">0.6083</td><td class="num">0.2641</td><td class="num neg">−0.3442</td></tr>
+<tr><td>Qwen</td><td class="num">0.6691</td><td class="num">0.7252</td><td class="num pos">+0.0561</td></tr>
+</tbody></table></div>
+
+<div class="call key">
+  <span class="lbl">ข้อค้นพบหลัก</span>
+  <p><strong>เครื่องหมายกลับกันระหว่างสองตระกูล และกลับทั้งในเงื่อนไข C และ D</strong></p>
+  <p>ถ้าผลซ้ำกันทั้งสองแถว เราจะสรุปได้ว่า “การจูนไทยทำให้ agent ระมัดระวังขึ้น” — น่าสนใจระดับหนึ่ง แต่การที่มัน <strong>ไม่ซ้ำ</strong> เป็นข้อสรุปที่แข็งแรงกว่า เพราะมันปฏิเสธสมมติฐานโดยตรง: <strong>“จูนภาษาไทยแล้ว” ไม่ใช่ตัวแปรที่พยากรณ์พฤติกรรมในแบบจำลองได้</strong> ความต่างที่ Ferencz et al. ชี้ว่ามีอยู่ ไม่ได้ถูกแก้ด้วยการจูนภาษา</p>
+  <p>หลักฐานเชิงกลไกที่มาสนับสนุนคือการทดลอง agent 13 — <code>openthaigpt7b</code> ซึ่งจูนไทย กลับเป็นตัวเดียวที่ <strong>ไม่อ่าน persona ของตัวเองเลย</strong> การจูนภาษาไม่ได้รับประกันแม้แต่ว่าโมเดลจะใช้ข้อมูลที่ให้ไป</p>
+</div>
+
+<h3 id="s4-3">4.2 ข้อค้นพบที่ขัดกับ Williams et al.</h3>
+<div class="tw"><table>
+<thead><tr><th>เงื่อนไข</th><th class="num">attack rate</th></tr></thead>
+<tbody>
+<tr><td>B (กฎ ไม่มี LLM)</td><td class="num">0.469</td></tr>
+<tr><td>A (ไม่มีพฤติกรรมเลย)</td><td class="num">0.795</td></tr>
+<tr><td>C · llama8b</td><td class="num">0.819</td></tr>
+<tr><td>C · qwen7b</td><td class="num">0.830</td></tr>
+<tr><td>C · seallm7b</td><td class="num">0.845</td></tr>
+<tr><td>C · openthaigpt7b</td><td class="num">0.858</td></tr>
+</tbody></table></div>
+
+<p><strong>สี่ใน C ห้าโมเดลทำให้การระบาดแย่กว่าไม่มีพฤติกรรมเลย</strong> สาเหตุอยู่ที่ q̄<sub>out</sub> ซึ่งเกิน 1 สำหรับสี่โมเดล — แปลว่า agent ออกจากบ้าน <strong>มากกว่า</strong> วันปกติในช่วงที่มีโรคระบาด ซึ่งไม่สมเหตุสมผลเชิงพฤติกรรม แต่เป็นสิ่งที่โมเดลทำจริง ๆ</p>
+
+<p>รากคือ LLM มีแนวโน้มเลือก <code>work_onsite</code> สูงมาก (0.66–0.80) ขณะที่ <code>baseline_mix</code> สมมติว่าวันปกติมีแค่ 0.55 โมเดลไม่ได้ “ลดกิจกรรมเพราะมีโรค” มันแค่ “ตอบว่าไปทำงาน” เพราะนั่นคือคำตอบที่ดูสมเหตุสมผลที่สุดเมื่อ persona บอกว่าไม่ไปทำงานแล้วขาดรายได้</p>
+
+<p><strong>หัวข้อ 5.9 จึงจำเป็น</strong> เพราะข้อสรุปนี้แขวนอยู่กับเลข 0.55 ที่เป็น assumption ล้วน เราจึงรันซ้ำด้วย <code>work_onsite = 0.67</code> (= employment_rate คือขอบบนที่ป้องกันได้: สมมติว่าคนมีงานทุกคนไปทำงานในวันปกติ) ผลคือ</p>
+<ul>
+<li><strong>ผลของการจูนคงเครื่องหมายทั้งสองตระกูล</strong> และแรงขึ้นในฝั่ง Llama (−0.176 → −0.226) → ข้อค้นพบหลักไม่ขึ้นกับสมมติฐานนี้</li>
+<li><strong>แต่ข้อสังเกต “C แย่กว่า A” ไม่คงทน</strong> ลดจากสี่โมเดลเหลือสาม (<code>llama8b</code> ลงมาที่ 0.783 ต่ำกว่า A)</li>
+</ul>
+<p>จึงต้องเขียนแยกเป็นสองส่วนในหัวข้อ 5.9.3 ไม่ใช่สรุปรวมว่า “คงทน”</p>
+
+<h3 id="s4-4">4.3 หัวข้อ 5.8 — ทำไม B ไวกว่า C และทำไมเครื่องหมายกลับกัน</h3>
+<p>กวาด <code>w_home_scale</code> ที่ค่า 0.5, 1.0, 1.5</p>
+<ul>
+<li>เงื่อนไข <strong>B</strong> ขยับ <strong>0.176</strong></li>
+<li>เงื่อนไข <strong>C</strong> ขยับไม่เกิน <strong>0.025</strong> ทุกโมเดลทุกแกน</li>
+<li>และ <strong>ไปคนละทิศ</strong></li>
+</ul>
+
+<p>พีชคณิตอธิบายได้หมด จาก β<sub>eff</sub> = β₀[w<sub>home</sub> + (1−w<sub>home</sub>)·q̄<sub>out</sub>·q<sub>policy</sub>] การเพิ่ม w<sub>home</sub> คือการย้ายน้ำหนักออกจากพจน์ที่คูณ q̄<sub>out</sub></p>
+
+<div class="math">
+∂β<sub>eff</sub> / ∂<span class="v">w</span><sub>home</sub> = β₀ (1 − q̄<sub>out</sub>)
+<small>เครื่องหมายขึ้นกับว่า q̄_out อยู่ฝั่งไหนของ 1</small>
+</div>
+
+<ul>
+<li>B มี q̄<sub>out</sub> ≈ 0.475 (&lt; 1) → เพิ่ม w<sub>home</sub> แล้ว β <strong>สูงขึ้น</strong> · R₀ 1.31 → 1.58</li>
+<li>C/llama8b มี q̄<sub>out</sub> ≈ 1.10 (&gt; 1) → เพิ่ม w<sub>home</sub> แล้ว β <strong>ต่ำลง</strong> · R₀ 2.14 → 2.08</li>
+</ul>
+
+<p>และขนาดของผลก็ต่างกันเพราะ final-size curve: B อยู่ที่ z ≈ 0.47 ที่ความชัน 0.88 ส่วน C อยู่ที่ z ≈ 0.82 ที่ความชัน 0.24 — <strong>ต่างกันเกือบสี่เท่า</strong></p>
+
+<div class="call trap">
+  <span class="lbl">ต้องเขียนให้ซื่อสัตย์</span>
+  <p>“ความคงทน” ของเงื่อนไข C ส่วนหนึ่งคือ <strong>saturation ไม่ใช่ความมั่นคงของแบบจำลอง</strong> ถ้าไม่เขียนกำกับ มันจะเป็นการอ้างความแข็งแรงที่ไม่มีจริง</p>
+</div>
+
+<h3 id="s4-5">4.4 หัวข้อ 5.10 — ลดจริงหรือแค่ยืดเวลา</h3>
+<p>เงื่อนไขทั้งหมดรัน 180 วัน แต่ที่ 180 วัน <code>typhoon8b</code> เงื่อนไข D ยัง <strong>ไม่จบ</strong> (I = 0.14% ยังเหลือ) จึงรันต่อถึง 365 วัน</p>
+
+<div class="tw"><table>
+<thead><tr><th></th><th class="num">180 วัน</th><th class="num">365 วัน</th></tr></thead>
+<tbody>
+<tr><td>C</td><td class="num">0.643</td><td class="num">0.679 <span style="color:var(--ink-3)">(จบแล้ว)</span></td></tr>
+<tr><td>D</td><td class="num">0.284</td><td class="num">0.422 <span style="color:var(--ink-3)">(ยังไม่จบ)</span></td></tr>
+<tr><td><strong>ส่วนต่าง C−D</strong></td><td class="num"><strong>0.359</strong></td><td class="num"><strong>0.258</strong></td></tr>
+</tbody></table></div>
+
+<p><strong>เหลือ 72%</strong> แปลว่าประมาณ 30% ของประโยชน์ที่วัดได้ที่ 180 วันเป็นการ <strong>ยืดเวลา</strong> ล้วน ๆ ไม่ใช่การลดจำนวนผู้ติดเชื้อ</p>
+
+<p>แต่การยืดเวลาก็มีค่าในตัวมันเอง — พีคลดจาก 6.4% เหลือ 2.3% และเลื่อนจากวันที่ 118 ไปวันที่ 160 ในทางสาธารณสุขนั่นคือ flattening the curve ที่แท้จริง (ลดภาระโรงพยาบาลสูงสุด 65% และซื้อเวลาเพิ่ม 42 วัน) จึงต้องรายงานทั้งสองด้าน ไม่ใช่แค่ “ลดได้ 0.359”</p>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5"><span class="num">5</span>โครงสร้างการรันบนเซิร์ฟเวอร์</h2>
+
+<h3>ทำไมต้องมี <code>scripts/run_server.py</code> แยกจาก notebook</h3>
+<p>Colab ตัดการเชื่อมต่อ และไม่มี GPU ที่พอสำหรับ 5 โมเดล × 6 ซีด × 2 เงื่อนไข × 180 วัน เซิร์ฟเวอร์ CU-AIM มี A100 แต่รัน notebook ไม่ได้ (ไม่มี interactive session ยาว ๆ)</p>
+<pre>cfg[<span class="s">"sim"</span>][<span class="s">"days"</span>] = args.days    <span class="c"># same override as the DAYS cell in notebooks 04/05 -> same run ids</span></pre>
+<p>บรรทัดนี้คือจุดที่ parity เกิดขึ้น ถ้าใครเปลี่ยนบรรทัดนี้ฝั่งเดียว งานที่เสร็จแล้วจะหยุดถูกรู้จัก และจะถูกรันใหม่แทนที่จะข้าม</p>
+
+<h3><code>d_gate</code> — ด่านของเงื่อนไข D</h3>
+<pre>runs = load_runs(ROOT, pattern=<span class="s">f"C_{args.model}_*"</span>)
+C = runs[(runs.tag == <span class="s">""</span>) &amp; (runs.days == args.days)]
+<span class="k">if</span> missing: <span class="k">return</span> <span class="s">f"condition C missing for seeds {sorted(missing)}"</span>
+<span class="k">if</span> C.fallback_rate.max() &gt;= 0.05:
+    <span class="k">return</span> <span class="s">f"fallback rate {C.fallback_rate.max():.1%} &gt;= 5% in condition C"</span></pre>
+<p>D คือ C บวกผู้นำ ถ้า C ของโมเดลนั้นยังไม่น่าเชื่อถือ (fallback เกิน 5% แปลว่าการตัดสินใจเกิน 5% ไม่ได้มาจากโมเดล) การรัน D จะเปลืองเวลา GPU ไปกับผลที่ตีความไม่ได้ และถ้าปล่อยให้รันไปแล้วค่อยมาพบทีหลัง ก็ไม่มีทางย้อนได้</p>
+<p>ด่านนี้อยู่ <strong>สองที่</strong> คือ <code>run_server.py</code> และ notebook 05 และ <strong>ต้องเหมือนกันเป๊ะ</strong> (invariant ข้อ 5) เพราะถ้าสองเส้นทางใช้เกณฑ์ต่างกัน ผลที่ผ่านด่านบน Colab อาจไม่ผ่านบนเซิร์ฟเวอร์ แล้วแผงก็จะไม่ครบโดยไม่มีใครรู้ว่าทำไม</p>
+
+<h3><code>scripts/server/server.env</code> — ทุกการตั้งค่าอยู่ในรีโป</h3>
+<pre>QOS=<span class="s">"gpu40g"</span>
+GPU_GRES=<span class="s">"gpu:7g.40gb:1"</span>
+TIME_GPU=<span class="s">"08:00:00"</span>
+MODELS=<span class="s">"llama8b typhoon8b qwen7b openthaigpt7b seallm7b"</span>
+STAGES=<span class="s">"feasibility C D"</span>
+SEEDS_IN_PARALLEL=1</pre>
+<p><strong>ทำไมไม่ส่ง flag ทางบรรทัดคำสั่ง</strong> — เพราะ flag ที่พิมพ์ด้วยมือไม่ถูกบันทึกที่ไหนเลย สามเดือนผ่านไปจะไม่มีใครรู้ว่ารันด้วยค่าอะไร การเก็บใน <code>server.env</code> ที่ commit ลงรีโปทำให้ <strong>งานทุกชิ้นสร้างซ้ำได้จากรีโปอย่างเดียว</strong></p>
+
+<h3>กับดัก SLURM ที่เสียเวลาไปจริง</h3>
+<div class="call trap">
+  <span class="lbl">สองข้อนี้หน้าตาเหมือน “คิวยาว” ธรรมดา แต่ไม่ใช่</span>
+  <p><strong>1.</strong> <code>TIME_GPU</code> เกิน MaxWall ของ QoS → งาน <strong>pending ตลอดกาล</strong> อยู่ในสถานะ <code>QOSMaxWallDurationPerJobLimit</code> ไม่มี error ไม่มีอะไร แค่ไม่รัน</p>
+  <p><strong>2.</strong> ทุก GPU QoS มี <code>MaxJobsPU=1</code> คือหนึ่งคนรันได้ทีละงานเดียว → <strong><code>MAX_PARALLEL</code> ไม่มีผลอะไรเลยบนคลัสเตอร์นี้</strong> array tasks รันทีละตัวไม่ว่าตั้งเท่าไหร่ ต้อง <strong>บวกเวลาทุก task ไม่ใช่หารด้วย MAX_PARALLEL</strong> ถ้าประมาณผิดก็จะตั้ง <code>TIME_GPU</code> ผิดแล้วไปเจอกับดักข้อ 1</p>
+  <p>ตรวจได้ด้วย <code>sacctmgr show qos format=Name,MaxJobsPU,MaxTRESPU,MaxWall</code></p>
+</div>
+
+<h3>กับดักการวัดเวลา</h3>
+<p><code>SEEDS_IN_PARALLEL=1</code> คือสามซีดรันเป็นสาม process บน GPU ตัวเดียว แต่ละรันช้าลง ~3.3 เท่า แต่ stage ทั้งหมดเสร็จในเวลาประมาณหนึ่งรันเดี่ยว</p>
+<p>ผลข้างเคียงคือ <strong><code>runtime_s</code> ใน <code>outputs/metrics.csv</code> เป็นตัวเลขที่ถูกแชร์ GPU แล้ว</strong> เอาไปประมาณเวลารันเดี่ยวไม่ได้ (จะเกินจริง 3.3 เท่า)</p>
+
+<h3>ทำไมต้องใช้ Singularity container</h3>
+<p>glibc บน CU-AIM เป็น 2.17 ซึ่งเก่ากว่าที่ torch wheel ปัจจุบันต้องการ (≥ 2.28) ติดตั้งตรง ๆ ไม่ได้ จึงต้องรันในคอนเทนเนอร์ (<code>ENV_KIND="container"</code>, <code>docker://python:3.13-slim</code>) — เป็นเหตุผลเดียวกับที่ VS Code รุ่นใหม่ต่อเข้าเซิร์ฟเวอร์นี้ไม่ได้</p>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6"><span class="num">6</span><code>scripts/analysis/</code> และทำไมต้องมี</h2>
+
+<p><code>outputs/</code> อยู่ใน <code>.gitignore</code> (invariant ข้อ 6) ผลไม่เคยถูก commit มันอยู่บน Drive หรือเซิร์ฟเวอร์ ปัญหาที่ตามมาคือ <strong>ไม่มีอะไรในรีโปบันทึกว่าตัวเลขหนึ่ง ๆ ในรายงานมาจากไหน</strong> ถ้าสคริปต์ที่ผลิตมันอยู่ในโฟลเดอร์ชั่วคราว พอกรรมการถามว่า “0.1814 มายังไง” ก็ตอบไม่ได้</p>
+
+<div class="tw"><table>
+<thead><tr><th>สคริปต์</th><th>ผลิตอะไร</th></tr></thead>
+<tbody>
+<tr><td><code>headline_tables.py</code></td><td>ตาราง 2×2 และ baseline → หัวข้อ 5.1, 5.3, 5.5</td></tr>
+<tr><td><code>reason_analysis.py</code></td><td>สัดส่วนเหตุผลเชิงรายได้ / ความหลากหลาย → 5.4</td></tr>
+<tr><td><code>order_check.py</code></td><td>ความคงทนต่อลำดับตัวเลือกใน prompt → 5.7</td></tr>
+<tr><td><code>robustness_tables.py</code></td><td>sensitivity + baseline_mix + 365 วัน → 5.8–5.10</td></tr>
+<tr><td><code>fig_2x2_and_reasons.py</code></td><td>รูป 2×2 และความหลากหลายเหตุผล</td></tr>
+<tr><td><code>fig_sensitivity.py</code></td><td>tornado chart → 5.8</td></tr>
+<tr><td><code>fig_leader_paths.py</code></td><td>เส้นทางนโยบายของผู้นำ → 5.5</td></tr>
+<tr><td><code>seir_validation.py</code></td><td>รันเงื่อนไข A จนลู่เข้า เทียบ final size เชิงวิเคราะห์ → 5.1</td></tr>
+<tr><td><code>policy_decomposition.py</code></td><td>แยกช่องทางกลไกออกจากช่องทางพฤติกรรม → 5.5.1</td></tr>
+<tr><td><code>permutation_test.py</code></td><td>exact permutation test พร้อมพื้นของการออกแบบ → 5.3</td></tr>
+</tbody></table></div>
+
+<h3>สามสคริปต์ที่เพิ่มรอบหลัง และเหตุผลที่ต้องมี</h3>
+<p>สามตัวท้ายของตารางเขียนขึ้นหลังจากแผงหลักรันเสร็จแล้ว แต่ละตัวปิดช่องโหว่คนละแบบ</p>
+<div class="call why"><span class="lbl">seir_validation.py</span>
+<p>รายงานฉบับก่อนเทียบ 0.795 ของเงื่อนไข A กับสูตร <code>z = 1 − exp(−R₀z)</code> ที่ให้ 0.7968 แล้วอธิบายส่วนต่างว่าเป็น “หางที่ยังไม่หมด” ซึ่ง<strong>เทียบผิดสูตร</strong> เพราะแบบจำลองหว่าน E = I = 0.002 ไว้ตั้งแต่วันแรก สูตรที่ตรงกับเงื่อนไขเริ่มต้นคือ <code>s = s₀·exp(−R₀(1−s))</code> ซึ่งให้ 0.798176 และเมื่อรันเงื่อนไข A ต่อจนหางหมดจริงที่ 730 วัน โค้ดให้ค่าตรงกับสูตรถึง 3.8 × 10⁻¹³</p></div>
+<div class="call why"><span class="lbl">policy_decomposition.py</span>
+<p>ส่วนต่าง C−D รวมผลสองทางที่ลงมือพร้อมกัน คือ <code>q_policy</code> ที่คูณลดการแพร่เชื้อโดยตรง กับข้อความประกาศที่เปลี่ยน prompt ของประชาชน การรายงานแต่ส่วนต่างรวมเปิดช่องให้ถูกถามว่านับผลนโยบายซ้ำ สคริปต์นี้เล่นอนุกรมที่บันทึกไว้ซ้ำโดย<strong>ไม่ใช้ GPU เลย</strong> แล้วพบว่าช่องทางพฤติกรรมต่างกันราวสิบสามเท่าระหว่างโมเดล ขณะที่ช่องทางกลไกเกือบคงที่ ซึ่งยืนยันด้วยตัวเลขว่าความต่างใน D มาจากประชาชน ไม่ใช่ผู้นำ</p></div>
+<div class="call trap"><span class="lbl">permutation_test.py</span>
+<p>ที่ 3 ซีด เพดานของ exact permutation test อยู่ที่ p = 0.10 เขียนคำว่ามีนัยสำคัญไม่ได้เลย แม้ effect จะใหญ่กว่า sd หลายสิบเท่า พอขยายเป็น 6 ซีด เพดานลงมาที่ 0.0022 และ <strong>ค่า p ที่ได้ก็ไปนั่งที่เพดานพอดีทั้งสี่การเปรียบเทียบ</strong> บทเรียนคือค่า p ที่ชนเพดานรายงานจำนวนซีด ไม่ได้รายงานความแรงของหลักฐาน สคริปต์จึงพิมพ์เพดานออกมาคู่กับ p ทุกครั้ง</p></div>
+
+<h3>บทเรียนจากการตรวจย้อนกลับ</h3>
+<p>ตอนตรวจ ถ้าเขียน regex เองจะได้เปอร์เซ็นต์ต่างจากรายงาน นึกว่ารายงานผิด แต่พอรันสคริปต์ต้นฉบับกลับได้ตรงเป๊ะ (54/19/59/56/65 และ 76.5/65.2/64.8/19.0/17.1) ความต่างมาจาก <strong>ชุดคีย์เวิร์ด</strong> ที่รายงานใช้คือ <code>income|earn|money|wage|pay|รายได้|เงิน|ค่าจ้าง</code> และการนับความไม่ซ้ำทำบน <code>.strip().lower()</code> ไม่ใช่สตริงดิบ</p>
+<p>สองเรื่องนี้ — ชุดคีย์เวิร์ด และ normalisation — ถูกบันทึกใน README ร่วมกับกับดักสามสถานะสุขภาพ เพราะทั้งสองอย่าง <strong>เปลี่ยนข้อสรุป</strong> ถ้าทำผิด ไม่ใช่แค่เปลี่ยนตัวเลขทศนิยม</p>
+
+<h3>เรื่องรูป</h3>
+<p>รูป 2×2 เคยแสดง −0.333 ขณะที่รายงานเขียน −0.332 สาเหตุคือข้อมูลในสคริปต์วาดรูปถูก hardcode ไว้ที่ทศนิยมสามตำแหน่ง แล้วส่วนต่างถูกคำนวณจากค่าที่ปัดแล้ว แก้โดยให้อ่านจาก <code>outputs/runs/</code> โดยตรง</p>
+<div class="call key">
+  <span class="lbl">หลัก</span>
+  <p>ไม่มีตัวเลขไหนในรูปหรือในรายงานถูกพิมพ์ด้วยมือ ทุกตัวอ่านจากรันจริง ไม่งั้นรูปกับข้อความจะค่อย ๆ แยกจากกันทุกครั้งที่มีรันใหม่</p>
+</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7"><span class="num">7</span>สิ่งที่ควรรู้ไว้ตอบกรรมการ</h2>
+
+<ol>
+<li><strong>40 agent น้อยไปไหม</strong> — ไม่ใช่หนึ่ง agent หนึ่งคน เป็นตัวแทนกลุ่มถ่วงน้ำหนัก (<code>weight</code>) แต่ก็แปลว่าความหลากหลายภายในกลุ่มถูกตัด และ agent 13 ตัวเดียวขยับผลได้ ซึ่งเป็นทั้งจุดอ่อนและจุดที่ทำให้หัวข้อ 5.8.3 เป็นไปได้</li>
+<li><strong>prompt ภาษาอังกฤษในงานที่ศึกษาไทย</strong> — จงใจ เพื่อแยกความสามารถทางภาษาออกจากความเข้าใจบริบท แลกมาด้วยการไม่ได้ทดสอบการจูนไทยในโหมดที่ออกแบบมา</li>
+<li><strong>ไม่มีข้อมูลจริงมาเทียบ</strong> — ไม่มี ground truth ว่าคนไทยจริงจะเลือกอะไร สิ่งที่วัดได้คือ <strong>ความต่างระหว่างโมเดล</strong> ไม่ใช่ความถูกต้องของโมเดลใดโมเดลหนึ่ง นี่คือข้อจำกัดใหญ่ที่สุด และเป็นเหตุผลว่าทำไมคำถามวิจัยถูกตั้งเป็น “ต่างกันไหม” ไม่ใช่ “ตัวไหนแม่นกว่า”</li>
+<li><strong>พารามิเตอร์ส่วนใหญ่เป็น assumption</strong> — ยอมรับตรง ๆ ใน <code>parameter_sources.csv</code> และจัดการด้วย sensitivity sweep หัวข้อ 5.8–5.9 แทนที่จะอ้างว่าแม่น</li>
+<li><strong>หกซีดพอไหม</strong> — sd ของ attack rate ในเงื่อนไข C คือ 0.0010–0.0051 ขณะที่ effect size คือ 0.181 <strong>ต่างกันสองอันดับขนาด</strong> ที่ 6 ซีด exact permutation test ให้ p = 0.0022 ทั้งสองตระกูลในทั้งสองเงื่อนไข ซึ่งเป็น<strong>ค่าต่ำสุดที่การออกแบบนี้ให้ได้</strong> — สลับป้ายครบ 924 แบบแล้วไม่มีแบบไหนสุดโต่งกว่าของจริง ค่า p นี้จึงบอกจำนวนซีด ไม่ได้บอกความแรงของหลักฐาน ต้องอ่านคู่กับขนาดของผลเสมอ (เงื่อนไข D sd สูงกว่า สูงสุด 0.0213 ที่ llama8b แต่ก็ยังเล็กกว่า effect 0.332 สิบเท่า)</li>
+<li><strong>ชั้นสุขภาพ agent เป็นการคู่ควบทางเดียว</strong> — ไม่ย้อนกลับไปแตะ SEIR</li>
+<li><strong><code>mistral7b</code> ยังไม่ได้รัน</strong> — negative control ที่ตั้งใจไว้แต่งบ GPU ไม่พอ บันทึกไว้ใน working notes ว่าเป็นงานที่เลื่อนออกไป ไม่ใช่งานที่ลืม</li>
+</ol>
+
+<!-- ============ 8 ============ -->
+<h2 id="s8"><span class="num">8</span>สรุปสั้น ๆ ว่าทุกอย่างร้อยกันยังไง</h2>
+
+<figure>
+<svg viewBox="0 0 680 440" role="img" aria-label="แผนภาพลูปหนึ่งวันของแบบจำลอง">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g font-family="IBM Plex Sans Thai, sans-serif" font-size="12.5" color="#898781">
+    <!-- boxes -->
+    <g>
+      <rect x="150" y="14" width="380" height="42" rx="8" fill="none" stroke="#2a78d6" stroke-width="1.5"/>
+      <text x="340" y="33" text-anchor="middle" fill="#2a78d6" font-size="12" font-weight="600">contact matrix ไทย (Prem 2021)</text>
+      <text x="340" y="48" text-anchor="middle" fill="#898781" font-size="11">contacts.py แปลงเป็น c_out ต่อการกระทำ</text>
+    </g>
+    <g>
+      <rect x="150" y="82" width="380" height="42" rx="8" fill="none" stroke="#2a78d6" stroke-width="1.5"/>
+      <text x="340" y="101" text-anchor="middle" fill="#2a78d6" font-size="12" font-weight="600">40 persona ถ่วงน้ำหนัก</text>
+      <text x="340" y="116" text-anchor="middle" fill="#898781" font-size="11">agents.py · จาก persona_marginals.csv</text>
+    </g>
+    <g>
+      <rect x="150" y="150" width="380" height="42" rx="8" fill="none" stroke="#eb6834" stroke-width="1.5"/>
+      <text x="340" y="169" text-anchor="middle" fill="#eb6834" font-size="12" font-weight="600">LLM 5 ตัว เลือกหนึ่งในสี่กิจกรรม</text>
+      <text x="340" y="184" text-anchor="middle" fill="#898781" font-size="11">llm.py ประกอบ prompt ต่อ agent ต่อวัน</text>
+    </g>
+    <g>
+      <rect x="150" y="218" width="380" height="42" rx="8" fill="none" stroke="#eb6834" stroke-width="1.5"/>
+      <text x="340" y="237" text-anchor="middle" fill="#eb6834" font-size="12" font-weight="600">shares ถ่วงน้ำหนัก → q̄_out</text>
+      <text x="340" y="252" text-anchor="middle" fill="#898781" font-size="11">β_eff = β₀[w_home + (1−w_home)·q̄_out·q_policy]</text>
+    </g>
+    <g>
+      <rect x="150" y="286" width="380" height="42" rx="8" fill="none" stroke="#1baf7a" stroke-width="1.5"/>
+      <text x="340" y="305" text-anchor="middle" fill="#1baf7a" font-size="12" font-weight="600">SEIR เดินหนึ่งวัน (RK45)</text>
+      <text x="340" y="320" text-anchor="middle" fill="#898781" font-size="11">seir.py · S+E+I+R = N ตรวจทุกวัน</text>
+    </g>
+    <g>
+      <rect x="150" y="354" width="380" height="42" rx="8" fill="none" stroke="#1baf7a" stroke-width="1.5"/>
+      <text x="340" y="373" text-anchor="middle" fill="#1baf7a" font-size="12" font-weight="600">เคสที่รายงาน (flow E→I)</text>
+      <text x="340" y="388" text-anchor="middle" fill="#898781" font-size="11">หน่วง 1 วันก่อนถึงตาของ agent</text>
+    </g>
+    <!-- arrows down -->
+    <g stroke="#898781" stroke-width="1.3" fill="none" marker-end="url(#ar)">
+      <path d="M 340 56 V 76"/>
+      <path d="M 340 124 V 144"/>
+      <path d="M 340 192 V 212"/>
+      <path d="M 340 260 V 280"/>
+      <path d="M 340 328 V 348"/>
+    </g>
+    <!-- feedback loop -->
+    <g stroke="#eb6834" stroke-width="1.5" fill="none" marker-end="url(#ar)" stroke-dasharray="5 4" color="#eb6834">
+      <path d="M 150 375 H 70 V 171 H 144"/>
+    </g>
+    <text x="62" y="278" text-anchor="middle" fill="#eb6834" font-size="11" transform="rotate(-90 62 278)">agent เห็นเคสของเมื่อวาน</text>
+  </g>
+</svg>
+<figcaption>ลูปปิดที่เส้นประ — นั่นคือจุดที่พฤติกรรมกลายเป็น endogenous ทุกอย่างที่เหลือในรีโปมีไว้เพื่อให้ลูปนี้สร้างซ้ำได้เป๊ะ และให้ตัวเลขทุกตัวในรายงานสาวกลับไปหารันจริงได้</figcaption>
+</figure>
+
+<div class="call key">
+  <span class="lbl">ซ้อมตอบ — ท่องสามอย่างนี้ให้ขึ้นใจ</span>
+  <p><strong>ก.</strong> ทำไมต้อง 2×2 ไม่ใช่เทียบคู่เดียว</p>
+  <p><strong>ข.</strong> พจน์ w_home คืออะไร และทำไมมันทำให้ “อยู่บ้านแล้วยังติดได้”</p>
+  <p><strong>ค.</strong> ทำไม “คงทนต่อ sensitivity” ส่วนหนึ่งคือ saturation ไม่ใช่ความมั่นคงของแบบจำลอง</p>
+</div>
+
+<footer>
+  <p>เอกสารประกอบของ <strong>Thai-context GABM-SEIR</strong> · เขียนคู่กับ <code>report/final_report_TH.md</code> และ <code>report/slides.html</code></p>
+  <p>ตัวเลขทุกตัวในหน้านี้สร้างซ้ำได้จาก <code>scripts/analysis/</code> บน <code>outputs/runs/</code> ชุดปัจจุบัน</p>
+</footer>
+
+</main>
+</div>
+
+<script>
+// theme toggle
+(function(){
+  var b=document.getElementById('theme'), r=document.documentElement;
+  try{ var s=localStorage.getItem('gabm-theme'); if(s) r.setAttribute('data-theme',s); }catch(e){}
+  b.addEventListener('click',function(){
+    var cur=r.getAttribute('data-theme');
+    if(!cur){ cur = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light'; }
+    var next = cur==='dark' ? 'light':'dark';
+    r.setAttribute('data-theme',next);
+    try{ localStorage.setItem('gabm-theme',next); }catch(e){}
+  });
+})();
+
+// reading progress
+(function(){
+  var p=document.getElementById('prog');
+  function upd(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    p.style.width = (max>0 ? (h.scrollTop/max*100) : 0) + '%';
+  }
+  addEventListener('scroll',upd,{passive:true}); addEventListener('resize',upd); upd();
+})();
+
+// scroll-spy on the TOC
+(function(){
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var map={}; links.forEach(function(a){ var el=document.querySelector(a.getAttribute('href')); if(el) map[a.getAttribute('href')]=el; });
+  function upd(){
+    var y=window.scrollY+90, best=null, bestTop=-1e9;
+    links.forEach(function(a){
+      var el=map[a.getAttribute('href')]; if(!el) return;
+      var t=el.getBoundingClientRect().top+window.scrollY;
+      if(t<=y && t>bestTop){ bestTop=t; best=a; }
+    });
+    links.forEach(function(a){ a.classList.toggle('active', a===best); });
+  }
+  addEventListener('scroll',upd,{passive:true}); upd();
+})();
+</script>
+</body>
+</html>
