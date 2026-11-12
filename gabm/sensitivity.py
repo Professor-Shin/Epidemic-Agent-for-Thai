@@ -5,7 +5,9 @@ made on Colab is skipped on the server (and the other way round).
 """
 import copy
 
-from .agents import rescale_wfh
+import pandas as pd
+
+from .agents import make_personas, rescale_wfh
 from .sim import contact_model_from_cfg
 
 
@@ -37,6 +39,25 @@ def sensitivity_variants(cfg, root, personas, cm, axes=None):
     if "wfh_scale" in want:
         for v in S["wfh_scale"]:
             yield f"sens_wfh={v}", cfg, cm, rescale_wfh(personas, v)    # only WFH ability changes
+
+
+def persona_draw_variants(cfg, root, persona_seeds):
+    """(tag, personas) — the same cfg with the persona table redrawn under a different persona seed.
+
+    Every headline run shares one persona draw (`sim.persona_seed`), so the seeds in `sim.seeds` only resample
+    SEIR and the LLM, never the 40 residents themselves. Section 5.8.3 shows that one attribute of one agent
+    moved typhoon8b's answer on 111 of 180 days, which makes the persona draw the larger uncertainty and the
+    one never sampled. This axis samples it.
+
+    `cfg` is returned unchanged on purpose. `run_simulation` hashes the whole cfg into the run id, so putting
+    these seeds in base.yaml would change the id of every finished run; the draw reaches the id through the
+    persona table itself, which is hashed separately (see gabm/sim.py, `settings["personas"]`). That is also
+    why the seeds arrive as a CLI argument rather than a config row, exactly as SEEDS_OVERRIDE does for
+    sim.seeds.
+    """
+    marginals = pd.read_csv(root / cfg["personas"]["marginals"])
+    for ps in persona_seeds:
+        yield f"persona={ps}", make_personas(marginals, cfg["personas"], cfg["sim"]["n_agents"], ps)
 
 
 def baseline_mix_variants(cfg, root):

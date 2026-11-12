@@ -12,6 +12,8 @@ read -ra MODEL_LIST <<< "$MODELS"
 MODEL="${MODEL_LIST[$SLURM_ARRAY_TASK_ID]}"
 # SEEDS_OVERRIDE and FORCE are for one-off supplementary runs, e.g. a longer horizon where condition C does
 # not exist yet at that DAYS and the D gate would therefore refuse. Leave both unset for the panel.
+# PERSONA_SEEDS belongs to the persona stage only. These seeds cannot live in base.yaml: run_simulation hashes
+# the whole cfg into the run id, so one extra config row would rename every finished run.
 SEEDS="${SEEDS_OVERRIDE:-$(in_env python -c 'from gabm import load_config; print(*load_config()["sim"]["seeds"])')}"
 run() { in_env python scripts/run_server.py --model "$MODEL" --days "$DAYS" ${FORCE:+--force} "$@"; }
 
@@ -37,6 +39,9 @@ for stage in $STAGES; do
       run --stage sens ${SENS_AXES:+--axes "$SENS_AXES"} ;;
     order|baseline)
       run --stage "$stage" ;;
+    persona)
+      : "${PERSONA_SEEDS:?stage persona needs PERSONA_SEEDS, e.g. PERSONA_SEEDS=2027,2028,2029}"
+      run --stage persona --persona-seeds "$PERSONA_SEEDS" ;;
     *)
       echo "unknown stage '$stage' in STAGES" >&2; exit 1 ;;
   esac

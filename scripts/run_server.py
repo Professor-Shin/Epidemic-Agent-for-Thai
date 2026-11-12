@@ -26,7 +26,7 @@ import pandas as pd  # noqa: E402
 
 from gabm import load_config  # noqa: E402
 
-STAGES = ["check", "smoke", "feasibility", "C", "D", "order", "sens", "baseline"]
+STAGES = ["check", "smoke", "feasibility", "C", "D", "order", "sens", "baseline", "persona"]
 
 
 def parse_args():
@@ -38,6 +38,9 @@ def parse_args():
     ap.add_argument("--force", action="store_true",
                     help="feasibility: rerun even if the model is already in feasibility.csv; D: skip the C gate")
     ap.add_argument("--axes", help="sens: comma-separated subset of the sensitivity axes (default: all four)")
+    ap.add_argument("--persona-seeds", help="persona: comma-separated persona-draw seeds, e.g. 2027,2028,2029. "
+                    "Not a base.yaml row on purpose: the cfg is hashed into every run id, so adding one there "
+                    "would rename every finished run. Must match PERSONA_SEEDS in notebook 04.")
     ap.add_argument("--kernel", default=os.environ.get("PAPERMILL_KERNEL", "python3"), help="Jupyter kernel for papermill")
     ap.add_argument("--backend", choices=["transformers", "vllm", "mock"],
                     help="default: llm.backend from base.yaml; 'mock' tests the pipeline on CPU (runs excluded from analysis)")
@@ -128,7 +131,8 @@ def main():
             sys.exit(f"D gate not met for {args.model}: {problem} (run stage C first, or pass --force)")
 
     from gabm.llm import load_backend
-    from gabm.sensitivity import action_order_variants, baseline_mix_variants, sensitivity_variants
+    from gabm.sensitivity import (action_order_variants, baseline_mix_variants, persona_draw_variants,
+                                  sensitivity_variants)
     from gabm.sim import contact_model_from_cfg, run_simulation
 
     personas = pd.read_csv(ROOT / cfg["personas"]["file"])
@@ -149,6 +153,12 @@ def main():
         axes = args.axes.split(",") if args.axes else None
         for tag, c2, cm2, p2 in sensitivity_variants(cfg, ROOT, personas, cm, axes=axes):
             run_simulation(c2, "C", seed=sens_seed, tag=tag, **{**common, "cm": cm2, "personas": p2})
+    elif args.stage == "persona":
+        if not args.persona_seeds:
+            sys.exit("stage persona needs --persona-seeds, e.g. --persona-seeds 2027,2028,2029")
+        ps = [int(v) for v in args.persona_seeds.split(",")]
+        for tag, p2 in persona_draw_variants(cfg, ROOT, ps):
+            run_simulation(cfg, "C", seed=sens_seed, tag=tag, **{**common, "personas": p2})
     elif args.stage == "baseline":
         for tag, c2, cm2 in baseline_mix_variants(cfg, ROOT):
             run_simulation(c2, "C", seed=sens_seed, tag=tag, **{**common, "cm": cm2})
